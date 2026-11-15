@@ -13,7 +13,6 @@ from appuser.forms import (
     RegistrationForm,
     UserProfileForm,
 )
-from appuser.models import AppUser
 
 
 class ProtectedView(LoginRequiredMixin, TemplateView):

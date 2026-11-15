@@ -101,7 +101,7 @@ class updatePasswordApi(APIView):
                     'message': 'Password updated'
                 }
             )
-        except:
+        except: # noqa TO DO
             return JsonResponse(
                 {
                     'status': 'error',
@@ -137,7 +137,9 @@ class ProfileApi(APIView):
             )
 
         email_is_changed = data['email'].lower().strip() != request.user.email.lower().strip()
-        email_is_valid = email_is_changed and utils.email_is_unique(data['email'])
+        email_is_valid = email_is_changed and utils.email_is_unique(
+            data['email']
+        )
 
         if email_is_changed and not email_is_valid:
             return JsonResponse(
@@ -199,7 +201,9 @@ class ProfileApi(APIView):
         )
 
         if serializer.is_valid():
-            password_is_valid, password_errors = utils.validate_password_strength(request.data['password'])
+            password_is_valid, password_errors = utils.validate_password_strength(
+                request.data['password']
+            )
             if password_is_valid:
                 serializer.save()
                 serializer.instance.set_password(request.data['password'])
