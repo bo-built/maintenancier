@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title_tag %}Welcome{% endblock %}
+{% block page_content %}
+<div class="row">
+    <div class="col-md-4">
+        <h2>This is your app!</h2>
+    </div>
+    <div class="col-md-8">
+        <div class="card" style="width: 100%;">
+        <div class="card-body">
+            <h5 class="card-title">Welcome to Quickstarter</h5>
+            <h6 class="card-subtitle mb-2 text-muted">
+                Django + Alpine.js App Quickstart
+            </h6>
+            <p class="card-text">
+                You can replace this landing page with info about the app
+                you actually build.
+            </p>
+            {% if request.user.is_authenticated %}
+                <a href="{% url 'appuser:user_profile' %}" class="card-link">Update your profile</a>
+            {% else %}
+                <a href="{% url 'appuser:login' %}" class="card-link">Register or log in</a>
+            {% endif %}
+
+        </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title_tag %}Log In or Create Account{% endblock %}
+{% block extra_header %}
+	<script src="{% static 'js/utils.js' %}"></script>
+	<script src="{% static 'js/appuser/authenticate.js' %}"></script>
+{% endblock %}
+{% block page_content %}
+<div  x-data="authenticationApp">
+
+	<div class="row">
+		<div class="col-12">
+			<div class="alert alert-success"
+					x-show="successMessage"
+					x-text="successMessage"></div>
+			<div class="alert alert-danger"
+					x-show="errors.length > 0">
+					<div><strong>You have errors in your form:</strong></div>
+					<ul class="mb-0">
+						<template x-for="error in errors" :key="error">
+							<li x-text="error"></li>
+						</template>
+					</ul>
+				</div>
+		</div>
+	</div>
+
+	<div x-show="state === 'login'">
+		<div class="row">
+			<div class="col-12">
+				<h2>Existing Users</h2>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-12">
+				<form class="form" @submit.prevent="handleLogin">
+					<div>
+						{% csrf_token %}
+						{{ login_form.as_p }}
+						<button class="btn btn-success" type="submit">Login</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-12">
+				<h2>Not registered?</h2>
+				<button class="btn btn-primary" button @click="state = 'register'">Create Account</button>
+			</div>
+		</div>
+	</div> <!-- end login form state section -->
+
+	<div x-show="state === 'register'">
+		<div class="row">
+			<div class="col-12">
+				<h2>Create Account</h2>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-12">
+				<form class="form" @submit.prevent="handleRegistration">
+					{% csrf_token %}
+					{{ registeration_form.as_p }}
+					<button class="btn btn-success" type="submit">Create Account</button>
+				</form>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-12">
+				<h2>Already have an account?</h2>
+				<button class="btn btn-primary" button @click="state = 'login'">Return to Login</button>
+			</div>
+		</div>
+	</div> <!-- end register form state section -->
+</div>
+{% endblock %}

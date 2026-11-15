@@ -1,0 +1,25 @@
+nav div.container-fluid {
+  width: 90%;
+}
+
+.container {
+  padding-top: 50px;
+}
+
+.field-error {
+  border-color: red;
+}
+
+.hidden {
+  display: none;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+nav li.active {
+  text-decoration: underline;
+}
+
+/*# sourceMappingURL=styles.css.map */

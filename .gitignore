@@ -1,0 +1,5 @@
+.vscode
+.DS_Store
+db.sqlite3
+.venv
+*pycache*

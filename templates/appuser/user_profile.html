@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title_tag %}Profile{% endblock %}{% block extra_header %}
+	<script src="{% static 'js/utils.js' %}"></script>
+	<script src="{% static 'js/appuser/user-profile.js' %}"></script>
+{% endblock %}
+{% block page_content %}
+<div x-data="updateProfileApp" x-init="fetchProfile()">
+<div class="row">
+    <div class="col-md-4">
+        <h2>Your Profile</h2>
+    </div>
+    <div class="col-md-8" id="loading-placeholder">
+        <h2>loading data ...</h2>
+        <div class="spinner-border text-info" role="status">
+            <span class="visually-hidden"></span>
+        </div>
+    </div>
+    <div class="col-md-8 hidden" id="loaded-data">
+        <div class="alert alert-success"
+            id="success_message"
+            x-show="success_message"
+            x-text="success_message">
+        </div>
+        <div class="alert alert-danger"
+            id="errors"
+            x-show="errors.length > 0">
+            <div><strong>You have errors in your form:</strong></div>
+            <ul class="mb-0">
+                <template x-for="error in errors" :key="error">
+                    <li x-text="error"></li>
+                </template>
+            </ul>
+        </div>
+        <div x-show="state === 'view'">
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <th>First name:</th>
+                        <td x-text="display_profile.first_name"></td>
+                    </tr>
+                    <tr>
+                        <th>Last name:</th>
+                        <td x-text="display_profile.last_name"></td>
+                    </tr>
+                    <tr>
+                        <th>Email address:</th>
+                        <td x-text="display_profile.email"></td>
+                    </tr>
+                </tbody>
+                <tr>
+                    <td colspan="100%">
+                        <button class="btn btn-full btn-primary" button @click="state = 'edit'">Edit</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="100%">
+                        <button class="btn btn-full btn-danger" buttin @click="state = 'change_password'">Change Password</button>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+        <div  x-show="state === 'edit'">
+            <form class="form" @submit.prevent="handleUpdateProfile">
+                {% csrf_token %}
+                <table class="table">
+                    <tbody>
+                        {{form.as_table}}
+
+                        <tr>
+                            <td colspan="100%">
+                                <button class="btn btn-full btn-success" type="submit">Save</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="100%">
+                                <button class="btn btn-full btn-primary" button @click="state = 'view'" type="button">Cancel</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </form>
+
+        </div>
+        <div x-show="state === 'change_password'">
+            <form class="form" @submit.prevent="handleChangePassword">
+                {% csrf_token %}
+                <table class="table">
+                    <tbody>
+                        {{password_change_form.as_table}}
+
+                        <tr>
+                            <td colspan="100%">
+                                <button class="btn btn-full btn-danger" type="submit">Save</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="100%">
+                                <button class="btn btn-full btn-primary" button @click="state = 'view'" type="button">Cancel</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </form>
+
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
