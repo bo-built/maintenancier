@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title_tag %}Dashboard{% endblock %}{% block extra_header %}
+	<script src="{% static 'js/utils.js' %}"></script>
+	<script src="{% static 'js/shop/dashboard.js' %}"></script>
+{% endblock %}
+{% block page_content %}
+
+<div x-data="dashboardApp" x-init="initDashoard(
+    '{% url 'shop:machine_api' shop_pk=shop.pk %}',
+    '{% url 'shop:maintenance_schedule_api' shop_pk=shop.pk %}',
+)">
+<div class="row">
+    <div class="col-md-3">
+        <div>
+            <h1>{{shop.name}}</h1>
+        </div>
+        <div id="loading_machines">
+            <h2>loading machines ...</h2>
+            <div class="spinner-border text-info" role="status">
+                <span class="visually-hidden"></span>
+            </div>
+        </div>
+        <div id="machines_loaded" class="hidden">
+            <h2>Shop Machines</h2>
+            <template x-for="machine in machines" :key="machine.pk">
+                <div x-text="machine.name"></div>
+            </template>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <h2>Maintenance Schedule</h2>
+         <div id="schedule_loading">
+            <h2>loading schedule ...</h2>
+            <div class="spinner-border text-info" role="status">
+                <span class="visually-hidden"></span>
+            </div>
+         </div>
+         <div id="schedule_loaded" class="hidden">
+            <template x-for="(group, key) in schedule" :key="key">
+            <!-- Single root wrapper required by Alpine x-for -->
+            <div class="schedule_block">
+                <h4 x-text="group.title"></h4>
+                <template x-for="task in group.items" :key="task.pk">
+                    <div class="alert alert-info">
+
+                        <div class="row">
+                            <div class="col-3" x-text="task.machine_name || 'General Shop'"></div>
+                            <div class="col-3" x-text="task.item_name"></div>
+                            <div class="col-3" x-text="task.interval"></div>
+                            <div class="col-2" x-text="task.due_date"></div>
+                            <div class="col-1">
+                                <button type="button" class="btn-close"></button>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="row">
+                            <div class="col" x-text="task.description || 'no description'"></div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+         </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,25 +1,30 @@
-from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
+from shop.models import Machine
+from shop import test_utils
 
-from shop.models import Shop, ShopUser
 
-
-class ApiShopPostTest(TestCase):
+class ShopTestCaseWithData(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username='dinaf@cloud9.com',
-            password='supers@f32',
-        )
+        (
+            self.user,
+            self.shop,
+            self.shop_user,
+            self.machines,
+            self.maintenance_items
+        ) = test_utils.generate_test_data()
         self.async_client.force_login(self.user)
 
-    async def test_successful_shop_creation(self):
+
+class ShopApiViewTest(ShopTestCaseWithData):
+
+    async def test_successful_shop_post(self):
         ''' Verify new shop instance is created from successful post call
         '''
         url = reverse('shop:shop_api')
 
         payload = {
-            'name': 'Cloud 9 Ozark Highlands',
+            'name': 'Sturgis & Sons',
         }
 
         response = await self.async_client.post(
@@ -31,32 +36,79 @@ class ApiShopPostTest(TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()['message'], 'Shop created')
 
-
-class ApiShopPatchTest(TestCase):
-    def setUp(self):
-        self.user = User.objects.create_user(
-            username='dinaf@cloud9.com',
-            password='supers@f32',
+    async def test_successful_shop_get(self):
+        url = reverse('shop:shop_api')
+        response = await self.async_client.get(
+            url,
+            content_type='application/json',
         )
-        self.async_client.force_login(self.user)
+        self.assertEqual(response.status_code, 200)
 
-        self.shop = Shop(name='Cloud 9 Ozark Highlands')
-        self.shop.save()
+    async def test_successful_shop_patch(self):
+        url = reverse('shop:shop_detail_api', kwargs={'shop_pk': self.shop.pk})
+        new_name = 'Cloud 9 Ozark Highlands Distribution Center'
+        response = await self.async_client.patch(
+            url,
+            data={'name': new_name},
+            content_type='application/json',
+        )
 
-        self.shop_user = ShopUser(shop=self.shop, user=self.user)
-        self.shop_user.save()
+        self.assertEqual(response.status_code, 200)
 
-    async def test_successful_shop_update(self):
-        ''' Verify new shop instance is created from successful post call
-        '''
+        await self.shop.arefresh_from_db()
 
-        new_shop_name = 'Cloud 9 Ozark Highlands Distribution Center'
+        self.assertEqual(
+            new_name,
+            self.shop.name
+        )
 
-        url = reverse('shop:shop_detail_api', kwargs={'pk': self.shop.pk})
+    async def test_successful_shop_delete(self):
+        ''' Verify method not implemented '''
+        url = reverse('shop:shop_detail_api', kwargs={'shop_pk': self.shop.pk})
+        response = await self.async_client.delete(
+            url,
+            data={},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 501)
+        self.assertEqual(
+            response.data['message'],
+            'This method is not implemented yet'
+        )
 
-        payload = {
-            'name': new_shop_name,
-        }
+
+class MachineApiTest(ShopTestCaseWithData):
+
+    async def test_successful_machine_fetch(self):
+        machine_names = [m.name for m in self.machines]
+        url = reverse('shop:machine_api', kwargs={'shop_pk': self.shop.pk})
+        response = await self.async_client.get(
+            url,
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        response_machines = [r['name'] for r in response.data]
+
+        self.assertEqual(
+            response_machines.sort(),
+            machine_names.sort()
+        )
+
+    async def test_successful_machine_patch(self):
+        update_machine = self.machines[0]
+
+        new_name = 'Shop Bot 2.0'
+
+        url = reverse(
+            'shop:machine_detail_api',
+            kwargs={
+                    'shop_pk': self.shop.pk,
+                    'machine_pk': update_machine.pk
+                }
+            )
+
+        payload = {'name': new_name}
 
         response = await self.async_client.patch(
             url,
@@ -64,8 +116,199 @@ class ApiShopPatchTest(TestCase):
             content_type='application/json',
         )
 
-        await self.shop.arefresh_from_db()
+        await update_machine.arefresh_from_db()
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()['message'], 'Shop updated')
-        self.assertEqual(self.shop.name, new_shop_name)
+        self.assertEqual(update_machine.name, new_name)
+
+    async def test_successful_machine_post(self):
+        new_name = 'Shop Bot 2.0'
+        url = reverse(
+            'shop:machine_api',
+            kwargs={'shop_pk': self.shop.pk, }
+            )
+
+        payload = {'name': new_name}
+
+        response = await self.async_client.post(
+            url,
+            data=payload,
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        machine_exists = await Machine.objects.aget(pk=response.data['machine']['pk'])
+        self.assertTrue(machine_exists)
+        self.assertEqual(machine_exists.name, new_name)
+
+    async def test_successful_machine_delete(self):
+        ''' Verify method not implemented '''
+        url = reverse(
+            'shop:machine_detail_api',
+            kwargs={
+                'shop_pk': self.shop.pk,
+                'machine_pk': self.machines[0].pk
+            }
+        )
+        response = await self.async_client.delete(
+            url,
+            data={},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 501)
+        self.assertEqual(
+            response.data['message'],
+            'This method is not implemented yet'
+        )
+
+
+class MaintenanceScheduleApiTest(ShopTestCaseWithData):
+
+    async def test_successful_maintenance_schedule_fetch(self):
+        pass
+
+    async def test_successful_maintenance_schedule_post(self):
+        ''' Verify method not implemented '''
+        url = reverse(
+            'shop:maintenance_schedule_api',
+            kwargs={
+                'shop_pk': self.shop.pk,
+            }
+        )
+        response = await self.async_client.post(
+            url,
+            data={},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 501)
+        self.assertEqual(
+            response.data['message'],
+            'This method is not implemented yet'
+        )
+
+    async def test_successful_maintenance_schedule_patch(self):
+        ''' Verify method not implemented '''
+        url = reverse(
+            'shop:maintenance_schedule_detail_api',
+            kwargs={
+                'shop_pk': self.shop.pk,
+                'item_pk': self.maintenance_items[0].pk,
+            }
+        )
+        response = await self.async_client.patch(
+            url,
+            data={},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 501)
+        self.assertEqual(
+            response.data['message'],
+            'This method is not implemented yet'
+        )
+
+    async def test_successful_maintenance_schedule_delete(self):
+        ''' Verify method not implemented '''
+        url = reverse(
+            'shop:maintenance_schedule_detail_api',
+            kwargs={
+                'shop_pk': self.shop.pk,
+                'item_pk': self.maintenance_items[0].pk,
+            }
+        )
+        response = await self.async_client.delete(
+            url,
+            data={},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 501)
+        self.assertEqual(
+            response.data['message'],
+            'This method is not implemented yet'
+        )
+
+
+class MaintenanceLogApiTest(ShopTestCaseWithData):
+
+    async def test_successful_maintenance_log_fetch(self):
+        ''' Verify method not implemented '''
+        url = reverse(
+            'shop:log_item_api',
+            kwargs={
+                'shop_pk': self.shop.pk,
+                'item_pk': self.maintenance_items[0].pk,
+            }
+        )
+        response = await self.async_client.get(
+            url,
+            data={},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 501)
+        self.assertEqual(
+            response.data['message'],
+            'This method is not implemented yet'
+        )
+
+    async def test_successful_maintenance_log_post(self):
+        ''' Verify method not implemented '''
+        url = reverse(
+            'shop:log_item_api',
+            kwargs={
+                'shop_pk': self.shop.pk,
+                'item_pk': self.maintenance_items[0].pk,
+            }
+        )
+        response = await self.async_client.post(
+            url,
+            data={},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 501)
+        self.assertEqual(
+            response.data['message'],
+            'This method is not implemented yet'
+        )
+
+    async def test_successful_maintenance_log_patch(self):
+        ''' Verify method not implemented '''
+        log_entry = await self.maintenance_items[0].maintenancelogentry_set.afirst()
+        url = reverse(
+            'shop:log_item_detail_api',
+            kwargs={
+                'shop_pk': self.shop.pk,
+                'item_pk': self.maintenance_items[0].pk,
+                'log_item_pk': log_entry.pk,
+            }
+        )
+        response = await self.async_client.patch(
+            url,
+            data={},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 501)
+        self.assertEqual(
+            response.data['message'],
+            'This method is not implemented yet'
+        )
+
+    async def test_successful_maintenance_log_delete(self):
+        ''' Verify method not implemented '''
+        log_entry = await self.maintenance_items[0].maintenancelogentry_set.afirst()
+        url = reverse(
+            'shop:log_item_detail_api',
+            kwargs={
+                'shop_pk': self.shop.pk,
+                'item_pk': self.maintenance_items[0].pk,
+                'log_item_pk': log_entry.pk,
+            }
+        )
+        response = await self.async_client.delete(
+            url,
+            data={},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 501)
+        self.assertEqual(
+            response.data['message'],
+            'This method is not implemented yet'
+        )
