@@ -1,18 +1,44 @@
 from django.contrib.auth.models import User
-from shop.models import Shop, ShopUser, Machine, MaintenanceScheduleItem
+from django.test import TestCase
+from shop.models import (
+    Shop,
+    ShopUser,
+    Machine,
+    MaintenanceScheduleItem,
+    MaintenanceLogEntry,
+)
 
 
 def generate_test_data():
     user = User.objects.create_user(
         username='dinaf@cloud9.com',
         password='supers@f32',
+        first_name='Dina',
+        last_name='Fox',
     )
 
     shop = Shop(name='Cloud 9 Ozark Highlands')
     shop.save()
 
-    shop_user = ShopUser(shop=shop, user=user)
-    shop_user.save()
+    shop_user = ShopUser.objects.create(shop=shop, user=user)
+
+    addtl_users = [
+        ('glenns@cloud9.com', 'Glenn', 'Sturgis'),
+        ('sandrak@cloud9.com', 'Sandra', 'Kaluiokalani'),
+        ('mateol@cloud9.com', 'Mateo', 'Liwanag'),
+    ]
+
+    addtl_shop_users = []
+
+    for _au in addtl_users:
+        addtl_user = User.objects.create_user(
+            username=_au[0],
+            first_name=_au[1],
+            last_name=_au[2],
+            password='supers@f32',
+        )
+        addtl_shop_user = ShopUser.objects.create(shop=shop, user=addtl_user)
+        addtl_shop_users.append(addtl_shop_user)
 
     machine_names = [
         'Cleaning Bot',
@@ -53,6 +79,8 @@ def generate_test_data():
         },
     ]
 
+    log_items = []
+
     for mi in _maintenance_items:
         new_item = MaintenanceScheduleItem.objects.create(
             shop=shop,
@@ -61,6 +89,7 @@ def generate_test_data():
             machine=mi['machine'],
         )
         maintenance_items.append(new_item)
+        log_items.append(MaintenanceLogEntry.objects.get(item=new_item))
 
     return (
         user,
@@ -68,4 +97,20 @@ def generate_test_data():
         shop_user,
         machines,
         maintenance_items,
+        log_items,
+        addtl_shop_users,
     )
+
+
+class PopulatedTestBase(TestCase):
+
+    def setUp(self):
+        (
+            self.user,
+            self.shop,
+            self.shop_user,
+            self.machines,
+            self.maintenance_items,
+            self.log_items,
+            self.addtl_shop_users,
+        ) = generate_test_data()

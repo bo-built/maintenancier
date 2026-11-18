@@ -50,6 +50,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'project.timezone_middleware.TimezoneMiddleware',
 ]
 
 REST_FRAMEWORK = {
@@ -131,7 +132,6 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-import os
 print("\n" + "="*50)
 print("DJANGO IS LOOKING FOR STATIC FILES HERE:")
 print(BASE_DIR / "static")
@@ -145,4 +145,3 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
-

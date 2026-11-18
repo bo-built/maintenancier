@@ -1,18 +1,11 @@
-from django.test import TestCase
 from django.urls import reverse
 from shop.models import Machine
-from shop import test_utils
+from shop.test_utils import PopulatedTestBase
 
 
-class ShopTestCaseWithData(TestCase):
+class ShopTestCaseWithData(PopulatedTestBase):
     def setUp(self):
-        (
-            self.user,
-            self.shop,
-            self.shop_user,
-            self.machines,
-            self.maintenance_items
-        ) = test_utils.generate_test_data()
+        super().setUp()
         self.async_client.force_login(self.user)
 
 
@@ -280,6 +273,108 @@ class MaintenanceLogApiTest(ShopTestCaseWithData):
                 'log_item_pk': log_entry.pk,
             }
         )
+        payload = {'status': 'done'}
+        response = await self.async_client.patch(
+            url,
+            data=payload,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 200)
+        await log_entry.arefresh_from_db()
+        self.assertEqual(
+            log_entry.status,
+            'done'
+        )
+        # TODO self.assertEqual(log_entry.done_by, self.user)
+
+    async def test_successful_maintenance_log_delete(self):
+        ''' Verify method not implemented '''
+        log_entry = await self.maintenance_items[0].maintenancelogentry_set.afirst()
+        url = reverse(
+            'shop:log_item_detail_api',
+            kwargs={
+                'shop_pk': self.shop.pk,
+                'item_pk': self.maintenance_items[0].pk,
+                'log_item_pk': log_entry.pk,
+            }
+        )
+        response = await self.async_client.delete(
+            url,
+            data={},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 501)
+        self.assertEqual(
+            response.data['message'],
+            'This method is not implemented yet'
+        )
+
+
+class ShopUserApiTest(ShopTestCaseWithData):
+
+    async def test_successful_current_shop_user_fetch(self):
+        expected_response = {
+            'pk': self.shop_user.pk,
+            'name': self.shop_user.name
+        }
+        url = reverse(
+            'shop:shop_user_api',
+            kwargs={
+                'shop_pk': self.shop.pk,
+            }
+        )
+        response = await self.async_client.get(
+            url,
+            data={},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 200)
+        for key, val in expected_response.items():
+            self.assertEqual(response.data[key], val)
+
+    async def test_successful_all_shop_user_fetch(self):
+        url = reverse(
+            'shop:shop_user_list_api',
+            kwargs={
+                'shop_pk': self.shop.pk,
+            }
+        )
+        response = await self.async_client.get(
+            url,
+            data={},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), len(self.addtl_shop_users) + 1)
+
+    async def test_successful_shop_user_post(self):
+        ''' Verify method not implemented '''
+        url = reverse(
+            'shop:shop_user_api',
+            kwargs={
+                'shop_pk': self.shop.pk,
+            }
+        )
+        response = await self.async_client.post(
+            url,
+            data={},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 501)
+        self.assertEqual(
+            response.data['message'],
+            'This method is not implemented yet'
+        )
+
+    async def test_successful_shop_user_patch(self):
+        ''' Verify method not implemented '''
+        url = reverse(
+            'shop:shop_user_detail_api',
+            kwargs={
+                'shop_pk': self.shop.pk,
+                'shop_user_pk': self.addtl_shop_users[0].pk,
+            }
+        )
         response = await self.async_client.patch(
             url,
             data={},
@@ -291,15 +386,13 @@ class MaintenanceLogApiTest(ShopTestCaseWithData):
             'This method is not implemented yet'
         )
 
-    async def test_successful_maintenance_log_delete(self):
+    async def test_successful_shop_user_delete(self):
         ''' Verify method not implemented '''
-        log_entry = await self.maintenance_items[0].maintenancelogentry_set.afirst()
         url = reverse(
-            'shop:log_item_detail_api',
+            'shop:shop_user_detail_api',
             kwargs={
                 'shop_pk': self.shop.pk,
-                'item_pk': self.maintenance_items[0].pk,
-                'log_item_pk': log_entry.pk,
+                'shop_user_pk': self.addtl_shop_users[0].pk,
             }
         )
         response = await self.async_client.delete(

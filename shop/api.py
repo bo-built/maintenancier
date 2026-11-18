@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-from shop.models import ShopUser, Machine
+from shop.models import ShopUser, Machine, MaintenanceLogEntry
 
 from shop import serializers
 
@@ -29,11 +29,52 @@ class ShopUserBaseApi(AuthenticatedApiView):
             self.shop = self.shopuser.shop
 
 
+class ShopUserApi(ShopUserBaseApi):
+
+    def get(self, request, shop_pk):
+        url_path = request.resolver_match.url_name
+        if url_path == 'shop_user_list_api':
+            serializer = serializers.shopUserSerializer(self.shop.shopuser_set, many=True)
+        else:
+            serializer = serializers.shopUserSerializer(self.shopuser)
+        return Response(serializer.data)
+
+    def post(self, request, shop_pk):
+        return Response(
+            {
+                'status': 'error',
+                'message': 'This method is not implemented yet',
+            },
+            status=status.HTTP_501_NOT_IMPLEMENTED
+        )
+
+    def patch(self, request, shop_pk, shop_user_pk):
+        return Response(
+            {
+                'status': 'error',
+                'message': 'This method is not implemented yet',
+            },
+            status=status.HTTP_501_NOT_IMPLEMENTED
+        )
+
+    def delete(self, request, shop_pk, shop_user_pk):
+        return Response(
+            {
+                'status': 'error',
+                'message': 'This method is not implemented yet',
+            },
+            status=status.HTTP_501_NOT_IMPLEMENTED
+        )
+
+
 class ShopApi(ShopUserBaseApi):
 
-    def get(self, request):
-        shops = [su.shop for su in request.user.shopuser_set.all()]
-        serializer = serializers.shopSerializer(shops, many=True)
+    def get(self, request, shop_pk=None):
+        if shop_pk:
+            serializer = serializers.shopSerializer(self.shop)
+        else:
+            shops = [su.shop for su in request.user.shopuser_set.all()]
+            serializer = serializers.shopSerializer(shops, many=True)
         return Response(serializer.data)
 
     def post(self, request):
@@ -258,7 +299,7 @@ class MaintenanceScheduleApi(ShopUserBaseApi):
         )
 
 
-class MaintenanceLogEntry(ShopUserBaseApi):
+class MaintenanceLogEntryApi(ShopUserBaseApi):
     def get(self, request, shop_pk, item_pk):
         return Response(
             {
@@ -278,12 +319,48 @@ class MaintenanceLogEntry(ShopUserBaseApi):
         )
 
     def patch(self, request, shop_pk, item_pk, log_item_pk):
+        log_item = get_object_or_404(MaintenanceLogEntry, pk=log_item_pk)
+
+        done_by_data = request.data.get('done_by')
+        save_kwargs = {}
+
+        if done_by_data is not None and request.data.get('status') == 'done':
+            if isinstance(done_by_data, dict) and 'pk' in done_by_data:
+                # Verify the ShopUser belongs to the same shop for security
+                save_kwargs['done_by'] = get_object_or_404(
+                    ShopUser,
+                    pk=done_by_data['pk'],
+                    shop__pk=shop_pk
+                )
+            else:
+                save_kwargs['done_by'] = None
+        if request.data.get('status') != 'done':
+            save_kwargs['done_by'] = None
+            save_kwargs['done_date'] = None
+
+        serializer = serializers.maintenanceLogEntrySerializer(
+            log_item,
+            data=request.data,
+            partial=True,
+        )
+
+        if serializer.is_valid():
+            serializer.save(**save_kwargs)
+            return Response(
+                {
+                    'status': 'ok',
+                    'message': 'Log item updated',
+                    'log_item': serializer.data,
+                },
+                status=status.HTTP_200_OK,
+            )
         return Response(
             {
                 'status': 'error',
-                'message': 'This method is not implemented yet',
+                'message': 'serializer errors',
+                'errors': serializer.errors,
             },
-            status=status.HTTP_501_NOT_IMPLEMENTED
+            status=status.HTTP_400_BAD_REQUEST
         )
 
     def delete(self, request, shop_pk, item_pk, log_item_pk):

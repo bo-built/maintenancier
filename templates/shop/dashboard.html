@@ -7,8 +7,7 @@
 {% block page_content %}
 
 <div x-data="dashboardApp" x-init="initDashoard(
-    '{% url 'shop:machine_api' shop_pk=shop.pk %}',
-    '{% url 'shop:maintenance_schedule_api' shop_pk=shop.pk %}',
+    '{% url 'shop:shop_detail_api' shop_pk=shop.pk %}',
 )">
 <div class="row">
     <div class="col-md-3">
@@ -42,7 +41,11 @@
             <div class="schedule_block">
                 <h4 x-text="group.title"></h4>
                 <template x-for="task in group.items" :key="task.pk">
-                    <div class="alert alert-info">
+                    <div class="alert":class="{
+                            'alert-info': task.status === 'pending',
+                            'alert-success': task.status === 'done',
+                            'alert-danger': task.status === 'overdue'
+                        }">
 
                         <div class="row">
                             <div class="col-3" x-text="task.machine_name || 'General Shop'"></div>
@@ -50,12 +53,29 @@
                             <div class="col-3" x-text="task.interval"></div>
                             <div class="col-2" x-text="task.due_date"></div>
                             <div class="col-1">
-                                <button type="button" class="btn-close"></button>
+                                <div class="form-check form-switch">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        :id="'task-switch-' + task.pk"
+                                        :checked="task.status === 'done'"
+                                        @change="updateTaskStatus(task, $event.target.checked)"
+                                    >
+                                    <label class="form-check-label" :for="'task-switch-' + task.pk"></label>
+                                </div>
                             </div>
                         </div>
                         <hr />
                         <div class="row">
-                            <div class="col" x-text="task.description || 'no description'"></div>
+                            <div class="col-10">
+                                <div class="col" x-text="task.description || 'no description'"></div>
+                            </div>
+                            <div class="col-2">
+                                <button
+                                    type="button"
+                                    class="btn btn-danger btn-sm"
+                                    @click="dismissTask(group, task)">X</button>
+                            </div>
                         </div>
                     </div>
                 </template>
