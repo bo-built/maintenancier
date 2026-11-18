@@ -2,6 +2,7 @@ from django.http import HttpResponse
 from django.template import loader
 from appuser.views import ProtectedView
 from shop.models import ShopUser
+from shop.forms import MaintenanceScheduleItemForm
 
 
 class Dashboard(ProtectedView):
@@ -22,5 +23,6 @@ class ShopDashboard(ProtectedView):
         context = {
             'appuser': request.user.appuser,
             'shop': shop,
+            'schedule_item_form': MaintenanceScheduleItemForm(shop=shop),
         }
         return HttpResponse(template.render(context, request))

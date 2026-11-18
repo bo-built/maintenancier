@@ -1,0 +1,23 @@
+<div class="modal fade" x-ref="dismissTaskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Dismiss Task</h5>
+                <button type="button" class="btn-close" aria-label="Close" @click="closeDismissTask()">
+                    <span aria-hidden="true"></span>
+                </button>
+            </div>
+            <form>
+                <div class="modal-body">
+                    Dismiss this instance of "<span x-text="dismissTargetTask.item_name"></span>"?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-warning"
+                    @click="dismissTask()">Dismiss</button>
+                    <button type="button" class="btn btn-primary"
+                        @click="closeDismissTask()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

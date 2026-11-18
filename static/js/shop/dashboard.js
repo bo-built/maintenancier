@@ -5,6 +5,68 @@ document.addEventListener('alpine:init', () => {
         schedule: {},
         shop: {},
         user: {},
+        createTaskModal: null,
+        dismissTaskModal: null,
+        dismissTargetGroup: [],
+        dismissTargetTask: {'name': 'tmp'},
+
+        openTaskModal() {
+            this.createTaskModal.show();
+        },
+
+        closeTaskModal() {
+            this.createTaskModal.hide();
+        },
+
+        async submitTask() {
+            // 1. Send your fetch POST/PATCH request here...
+
+            // 2. Close the modal automatically once saved
+            this.closeTaskModal();
+        },
+
+        confirmDismissTask(dismissTargetGroup, dismissTargetTask) {
+            this.dismissTargetGroup = dismissTargetGroup;
+            this.dismissTargetTask = dismissTargetTask;
+            this.dismissTaskModal.show();
+        },
+
+        closeDismissTask() {
+            this.dismissTargetGroup = [];
+            this.dismissTargetTask = {'name': 'tmp'};
+            this.dismissTaskModal.hide();
+        },
+
+        async dismissTask() {
+            try {
+                var payload = {
+                    status: 'dismissed',
+                }
+                const response = await fetch(this.dismissTargetTask.api_url, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error ${response.status}`);
+                }
+
+                // 2. Sync with the exact data returned by Django
+                const updatedTask = await response.json();
+                Object.assign(this.dismissTargetTask, updatedTask.log_item);
+                this.dismissTargetGroup.items = this.dismissTargetGroup.items.filter(
+                    item => item.pk !== this.dismissTargetTask.pk);
+                this.closeDismissTask();
+            } catch (error) {
+                // 3. Roll back the UI if the server request fails
+                task.status = previousStatus;
+                console.error('Failed to update task status:', error);
+            }
+        },
 
         async fetchThisUser(user_api_url) {
             try {
@@ -39,38 +101,6 @@ document.addEventListener('alpine:init', () => {
             } finally {
                 document.getElementById('schedule_loading').classList.add('hidden');
                 document.getElementById('schedule_loaded').classList.remove('hidden');
-            }
-        },
-
-        async dismissTask(group, task) {
-            dismiss = window.confirm('Dismiss "' + task.item_name +'"?');
-            if(dismiss) {
-                try {
-                    var payload = {
-                        status: 'dismissed',
-                    }
-                    const response = await fetch(task.api_url, {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken'),
-                        },
-                        body: JSON.stringify(payload),
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error ${response.status}`);
-                    }
-
-                    // 2. Sync with the exact data returned by Django
-                    const updatedTask = await response.json();
-                    Object.assign(task, updatedTask.log_item);
-                    group.items = group.items.filter(item => item.pk !== task.pk);
-                } catch (error) {
-                    // 3. Roll back the UI if the server request fails
-                    task.status = previousStatus;
-                    console.error('Failed to update task status:', error);
-                }
             }
         },
 
@@ -114,6 +144,22 @@ document.addEventListener('alpine:init', () => {
         },
 
         async initDashoard(shop_api_url) {
+            this.createTaskModal = new bootstrap.Modal(this.$refs.createTaskModal);
+            this.$refs.createTaskModal.addEventListener('hide.bs.modal', () => {
+                if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                }
+            });
+
+
+            this.dismissTaskModal = new bootstrap.Modal(this.$refs.dismissTaskModal);
+            this.$refs.dismissTaskModal.addEventListener('hide.bs.modal', () => {
+                if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                }
+            });
+
+
             try {
                 const response = await fetch(shop_api_url);
                 this.shop = await response.json();
