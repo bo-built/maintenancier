@@ -33,6 +33,8 @@ class maintenanceScheduleItemSerializer(serializers.HyperlinkedModelSerializer):
             'description',
             'source',
             'interval',
+            'display_interval',
+            'start_date',
             'machine',
         ]
 
@@ -62,6 +64,7 @@ class maintenanceLogEntrySerializer(serializers.HyperlinkedModelSerializer):
             'interval',
             'item_name',
             'machine_name',
+            'machine_pk',
             'description',
             'api_url',
         ]
@@ -78,6 +81,9 @@ class machineSerializer(serializers.HyperlinkedModelSerializer):
             'pk',
             'name',
             'api_url',
+            'dashboard_url',
+            'maintenance_history_api',
+            'shop_schedule_api_url',
             'maintenance_items',
         ]
 

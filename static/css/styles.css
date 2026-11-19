@@ -22,8 +22,20 @@ nav li.active {
   text-decoration: underline;
 }
 
-.link-btn-list {
+.pad-bottom {
   margin-bottom: 15px;
+}
+
+.card .card-header {
+  font-weight: bold;
+}
+
+.emph {
+  font-style: italic;
+}
+
+.float-right {
+  float: right;
 }
 
 /*# sourceMappingURL=styles.css.map */

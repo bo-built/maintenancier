@@ -12,16 +12,16 @@
 
 <div class="row">
     <div class="col-md-3">
-        <div>
+        <div class="pad-bottom">
             <h1>{{shop.name}}</h1>
         </div>
-        <div>
+        <div class="pad-bottom">
             <button type="button" class="btn btn-primary btn-full" @click="openTaskModal()">
                 + New Maintenance Task
             </button>
         </div>
         <div>
-            <h2>Shop Machines</h2>
+            <h2 class="pad-bottom">Shop Machines</h2>
             <div id="loading_machines">
                 <h3>loading machines ...</h3>
                 <div class="spinner-border text-info" role="status">
@@ -30,14 +30,14 @@
             </div>
             <div id="machines_loaded" class="hidden">
                 <template x-for="machine in machines" :key="machine.pk">
-                    <a href="" class="btn btn-info btn-full link-btn-list" x-text="machine.name"></div>
+                    <a :href="machine.dashboard_url" class="btn btn-info btn-full pad-bottom" x-text="machine.name"></div>
                 </template>
                 <div class="">
                     <template x-if="machines.length === 0">
-                        <div class="alert alert-warning link-btn-list">This shop doesn't have any machines yet</div>
+                        <div class="alert alert-warning pad-bottom">This shop doesn't have any machines yet</div>
                     </template>
                     <div>
-                        <button type="button" class="btn btn-primary btn-full link-btn-list" @click="openMachineModal()">
+                        <button type="button" class="btn btn-primary btn-full pad-bottom" @click="openMachineModal()">
                             + New Machine
                         </button>
                     </div>

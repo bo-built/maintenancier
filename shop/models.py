@@ -65,23 +65,24 @@ class Shop(models.Model):
     def get_upcoming_day(self):
         today = timezone.localdate()
         overdue = MaintenanceLogEntry.objects.filter(
+            item__shop=self,
             due_date__lte=today,
             status__in=['overdue', 'pending'],
-            item__shop=self,
             item__status='active',
         )
 
         due_today = MaintenanceLogEntry.objects.filter(
+            item__shop=self,
             due_date=today,
             status__in=['overdue', 'pending'],
-            item__shop=self,
             item__status='active',
         )
 
         done_today = MaintenanceLogEntry.objects.filter(
-            due_date__lte=today,
-            status__in=['done'],
             item__shop=self,
+            due_date__lte=today,
+            done_date__date=today,
+            status='done',
             item__status='active',
         )
 
@@ -109,24 +110,37 @@ class Shop(models.Model):
         tomorrow = today + timedelta(days=1)
         week_end = tomorrow + timedelta(days=6)
         return MaintenanceLogEntry.objects.filter(
+            item__shop=self,
             due_date__gte=tomorrow,
             due_date__lte=week_end,
-            item__shop=self,
             item__interval__gt=1,
             item__status='active',
-        ).all()
+        ).order_by('due_date').all()
 
     def get_upcoming_thirty_days_excluding_this_week(self):
         today = timezone.localdate()
         week_end = today + timedelta(days=6)
         month_end = week_end + timedelta(days=30)
         return MaintenanceLogEntry.objects.filter(
+            item__shop=self,
             due_date__gt=week_end,
             due_date__lte=month_end,
-            item__shop=self,
             item__interval__gt=1,
             item__status='active',
-        ).all()
+        ).order_by('due_date').all()
+
+    def get_maintenance_history(self):
+        return MaintenanceLogEntry.objects.filter(
+            item__shop=self,
+            status='done',
+        ).order_by('-done_date').all()
+
+    def get_machine_maintenance_history(self, machine):
+        return MaintenanceLogEntry.objects.filter(
+            item__shop=self,
+            item__machine=machine,
+            status='done',
+        ).order_by('-done_date').all()
 
 
 class ShopUser(StatusModel):
@@ -193,6 +207,30 @@ class Machine(StatusModel):
             }
         )
 
+    @property
+    def dashboard_url(self):
+        return reverse(
+            'shop:machine_dashboard',
+            kwargs={
+                'shop_pk': self.shop.pk,
+                'machine_pk': self.pk,
+            }
+        )
+
+    @property
+    def maintenance_history_api(self):
+        return reverse(
+            'shopapi:maintenance_machine_history_api',
+            kwargs={
+                'shop_pk': self.shop.pk,
+                'machine_pk': self.pk,
+            }
+        )
+
+    @property
+    def shop_schedule_api_url(self):
+        return reverse('shopapi:maintenance_schedule_api', kwargs={'shop_pk': self.shop.pk})
+
 
 class MaintenanceScheduleItem(StatusModel):
     ''' Represents a maintenance task that needs to be scheduled and repeated
@@ -245,11 +283,7 @@ class MaintenanceScheduleItem(StatusModel):
         )
 
     def save(self, *args, **kwargs):
-        ''' If an item is completed or dismissed, the next log item needs to be
-            scheduled or updated.
-
-            Create or update a child item and set its due date to item.interval
-            days from today.
+        ''' If an item is archived, delete incomplete future iterations
         '''
         just_archived = (
             self._original_status != self.Status.ARCHIVED
@@ -261,6 +295,10 @@ class MaintenanceScheduleItem(StatusModel):
 
         if just_archived:
             self.delete_incomplete_log_items()
+
+    @property
+    def display_interval(self):
+        return self.get_interval_display()
 
     @property
     def api_url(self):
@@ -336,7 +374,7 @@ class MaintenanceLogEntry(models.Model):
             self.item.shop
         )
 
-    def save(self, *args, **kwargs):
+    def save(self, bypass_child=False, force_done_date=False, *args, **kwargs):
         ''' If an item is completed or dismissed, the next log item needs to be
             scheduled or updated.
 
@@ -357,24 +395,27 @@ class MaintenanceLogEntry(models.Model):
         # Optional: update fields on this model before saving
         if generate_child:
             today = timezone.now()
-            self.done_date = today
+            if not force_done_date:
+                self.done_date = today
             self._description = self.item.description
             self._item_name = self.item.name
             due_next = today + timedelta(days=self.item.interval)
             if self.item.machine:
                 self._machine_name = self.item.machine.name
-            child = MaintenanceLogEntry.objects.filter(source=self).first()
-            if child:
-                child.due_date = due_next
-                child.save()
-            else:
-                child = MaintenanceLogEntry(
-                    source=self,
-                    item=self.item,
-                    due_date=due_next,
-                    status=self.Status.PENDING,
-                )
-                child.save()
+
+            if not bypass_child:
+                child = MaintenanceLogEntry.objects.filter(source=self).first()
+                if child:
+                    child.due_date = due_next
+                    child.save()
+                else:
+                    child = MaintenanceLogEntry(
+                        source=self,
+                        item=self.item,
+                        due_date=due_next,
+                        status=self.Status.PENDING,
+                    )
+                    child.save()
 
         super().save(*args, **kwargs)
 
@@ -404,6 +445,12 @@ class MaintenanceLogEntry(models.Model):
     @property
     def machine_name(self):
         return self._machine_name or self.item.machine.name
+
+    @property
+    def machine_pk(self):
+        if self.item.machine:
+            return self.item.machine.pk
+        return None
 
     @property
     def description(self):

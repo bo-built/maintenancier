@@ -16,4 +16,9 @@ urlpatterns = [
         views.ShopDashboard.as_view(),
         name='shop_dashboard',
     ),
+    path(
+        'shop/<int:shop_pk>/machine/<int:machine_pk>/',
+        views.MachineDashboard.as_view(),
+        name='machine_dashboard',
+    ),
 ]

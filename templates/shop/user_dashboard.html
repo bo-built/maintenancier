@@ -35,7 +35,7 @@
         </div>
         <div id="shops_loaded" class="hidden">
             <template x-for="shop in shops" :key="shop.pk">
-                <div class="link-btn-list">
+                <div class="pad-bottom">
                     <a :href="shop.shop_dashboard_url" class="btn btn-info btn-full" x-text="shop.name"></a>
                 </div>
             </template>

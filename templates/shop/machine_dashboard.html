@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title_tag %}{{machine.name}}{% endblock %}{% block extra_header %}
+	<script src="{% static 'js/utils.js' %}"></script>
+	<script src="{% static 'js/shop/machine_dashboard.js' %}"></script>
+{% endblock %}
+{% block page_content %}
+
+<div class="row">
+    <div class="col-12">
+        <a href="{% url 'shop:shop_dashboard' shop_pk=shop.pk %}" class="btn btn-primary">
+        Return to Shop
+        </a>
+    </div>
+    <div class="col-12"><h2>{{machine.name}} Maintenance</h2></div>
+</div>
+<div x-data="machineApp" x-init="initDashoard(
+    '{{machine.api_url}}',
+)">
+<div class="row" id="log_loading">
+    <div class="col-12">
+        <div class="spinner-border text-info" role="status">
+            <span class="visually-hidden"></span>
+        </div>
+    </div>
+</div>
+<div class="row hidden" id="log_loaded">
+    <div class="col-md-4">
+        <h3>Scheduled Maintenance Items</h3>
+        <div class="pad-bottom">
+            <button type="button" class="btn btn-primary btn-full" @click="openTaskModal()">
+                + New Maintenance Task
+            </button>
+        </div>
+        <template x-for="item in machine.maintenance_items" :key="item.pk">
+            <div class="card mb-3" style="max-width: 20rem;"
+                :class="!selectedTask ? 'bg-info' : (selectedTask === item ? 'bg-success' : 'bg-light')">
+                <div class="card-header" x-text="item.name"></div>
+                <div class="card-body">
+                    <p class="card-title emph" x-text="item.display_interval"></p>
+                    <p class="card-text" x-text="item.description"></p>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-warning btn-sm float-right"
+                        @click="setSelectedTask(item)">filter</button>
+                </div>
+            </div>
+        </template>
+    </div>
+    <div class="col-8">
+        <h3>Maintenance Log</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Done By</th>
+                    <th>Date Done</th>
+                </tr>
+            </thead>
+            <template x-for="log_item in log_entries.filter(entry => !selectedTask || entry.item.pk == selectedTask.pk)" :key="log_item.pk">
+                <tbody>
+                    <tr>
+                        <td x-text="log_item.item_name"></td>
+                        <td x-text="log_item.done_by.name"></td>
+                        <td x-text="new Date(log_item.done_date).toLocaleDateString()"></td>
+                    </tr>
+                </tbody>
+            </template>
+        </table>
+    </div>
+</div>
+{% include 'shop/includes/add_task_modal.html' %}
+</div>
+
+{% endblock %}

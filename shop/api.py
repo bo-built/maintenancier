@@ -167,9 +167,16 @@ class ShopApi(ShopUserBaseApi):
 
 
 class MachineApi(ShopUserBaseApi):
-    def get(self, request, shop_pk):
-        machines = self.shop.machine_set.filter(status='active').all()
-        serializer = serializers.machineSerializer(machines, many=True)
+    def get(self, request, shop_pk, machine_pk=None):
+        if machine_pk:
+            machine = get_object_or_404(
+                self.shop.machine_set,
+                pk=machine_pk
+            )
+            serializer = serializers.machineSerializer(machine)
+        else:
+            machines = self.shop.machine_set.filter(status='active').all()
+            serializer = serializers.machineSerializer(machines, many=True)
         return Response(serializer.data)
 
     def post(self, request, shop_pk):
@@ -245,14 +252,37 @@ class MachineApi(ShopUserBaseApi):
 
 
 class MaintenanceScheduleApi(ShopUserBaseApi):
-    def get(self, request, shop_pk, interval=None):
-        if interval:
-            if interval == 'today':
+    def get(self, request, shop_pk, interval=None, machine_pk=None):
+        url_path = request.resolver_match.url_name
+        if url_path in ['maintenance_history_api', 'maintenance_machine_history_api']:
+            if machine_pk:
+                machine = get_object_or_404(
+                    self.shop.machine_set,
+                    pk=machine_pk
+                )
+                instances = self.shop.get_machine_maintenance_history(machine)
+                serializer = serializers.maintenanceLogEntrySerializer(instances, many=True)
+            else:
+                instances = self.shop.get_maintenance_history()
+                serializer = serializers.maintenanceLogEntrySerializer(instances, many=True)
+            return Response(serializer.data)
+        elif url_path == 'maintenance_schedule_by_interval_api':
+            if interval == 'day':
                 instances = self.shop.get_upcoming_day()
             elif interval == 'week':
                 instances = self.shop.get_upcoming_week()
             elif interval == 'month':
                 instances = self.shop.get_upcoming_thirty_days_excluding_this_week()
+            # elif interval == 'history':
+            #    instances = self.shop.get_maintenance_history()
+            else:
+                return Response(
+                    {
+                        'status': 'error',
+                        'message': 'Bad request - interval options are "day", "week", "month"',
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             serializer = serializers.maintenanceLogEntrySerializer(instances, many=True)
             return Response(serializer.data)
@@ -290,7 +320,7 @@ class MaintenanceScheduleApi(ShopUserBaseApi):
                     {
                         'status': 'ok',
                         'message': 'Item created',
-                        'machine': serializer.data,
+                        'item': serializer.data,
                     },
                 )
         except:  # noqa TO DO

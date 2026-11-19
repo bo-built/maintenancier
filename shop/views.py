@@ -1,8 +1,14 @@
+from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from django.template import loader
 from appuser.views import ProtectedView
 from shop.models import ShopUser
-from shop.forms import MaintenanceScheduleItemForm, ShopForm, MachineForm
+from shop.forms import (
+    MaintenanceScheduleItemForm,
+    MachineMaintenanceScheduleItemForm,
+    ShopForm,
+    MachineForm,
+)
 
 
 class Dashboard(ProtectedView):
@@ -23,5 +29,18 @@ class ShopDashboard(ProtectedView):
             'shop': shop,
             'schedule_item_form': MaintenanceScheduleItemForm(shop=shop),
             'machine_form': MachineForm(),
+        }
+        return HttpResponse(template.render(context, request))
+
+
+class MachineDashboard(ProtectedView):
+    def get(self, request, *args, **kwargs):
+        shop = ShopUser.objects.get(user=request.user, shop__pk=kwargs['shop_pk']).shop
+        machine = get_object_or_404(shop.machine_set, pk=kwargs['machine_pk'])
+        template = loader.get_template('shop/machine_dashboard.html')
+        context = {
+            'shop': shop,
+            'schedule_item_form': MachineMaintenanceScheduleItemForm(machine=machine),
+            'machine': machine,
         }
         return HttpResponse(template.render(context, request))

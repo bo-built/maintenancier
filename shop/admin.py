@@ -52,3 +52,4 @@ class MaintenanceLogEntryForm(forms.ModelForm):
 @admin.register(models.MaintenanceLogEntry)
 class MaintenanceLogEntryAdmin(admin.ModelAdmin):
     form = MaintenanceLogEntryForm
+    list_filter = ['status', 'done_date', 'due_date', 'item__shop']

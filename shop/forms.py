@@ -96,3 +96,40 @@ class MaintenanceScheduleItemForm(forms.ModelForm):
 
         if shop is not None:
             self.fields['machine'].queryset = Machine.objects.filter(shop=shop)
+
+
+class MachineMaintenanceScheduleItemForm(forms.ModelForm):
+    def __init__(self, *args, machine=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if machine is not None:
+            self.fields['machine'].initial = machine
+            self.instance.machine = machine
+
+    class Meta:
+        model = MaintenanceScheduleItem
+        fields = [
+            'name',
+            'interval',
+            'description',
+            'start_date',
+            'machine',
+        ]
+        widgets = {
+            'machine': forms.HiddenInput(attrs={}),
+            'name': forms.TextInput(attrs={
+                'class': 'form-select',
+                'autocomplete': 'off',
+                'placeholder': 'The name of this task ...'
+            }),
+            'interval': forms.Select(attrs={
+                'class': 'form-select',
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-select',
+                'autocomplete': 'off',
+            }),
+            'start_date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',  # Renders native browser date picker
+            }),
+        }
