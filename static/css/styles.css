@@ -22,4 +22,8 @@ nav li.active {
   text-decoration: underline;
 }
 
+.link-btn-list {
+  margin-bottom: 15px;
+}
+
 /*# sourceMappingURL=styles.css.map */

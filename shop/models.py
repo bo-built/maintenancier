@@ -39,24 +39,28 @@ class Shop(models.Model):
     name = models.CharField(max_length=250, unique=True)
 
     @property
+    def shop_dashboard_url(self):
+        return reverse('shop:shop_dashboard', kwargs={'shop_pk': self.pk})
+
+    @property
     def shop_api_url(self):
-        return reverse('shop:shop_detail_api', kwargs={'shop_pk': self.pk})
+        return reverse('shopapi:shop_detail_api', kwargs={'shop_pk': self.pk})
 
     @property
     def machine_api_url(self):
-        return reverse('shop:machine_api', kwargs={'shop_pk': self.pk})
+        return reverse('shopapi:machine_api', kwargs={'shop_pk': self.pk})
 
     @property
     def schedule_api_url(self):
-        return reverse('shop:maintenance_schedule_api', kwargs={'shop_pk': self.pk})
+        return reverse('shopapi:maintenance_schedule_api', kwargs={'shop_pk': self.pk})
 
     @property
     def shopuser_list_api_url(self):
-        return reverse('shop:shop_user_list_api', kwargs={'shop_pk': self.pk})
+        return reverse('shopapi:shop_user_list_api', kwargs={'shop_pk': self.pk})
 
     @property
     def shopuser_api_url(self):
-        return reverse('shop:shop_user_api', kwargs={'shop_pk': self.pk})
+        return reverse('shopapi:shop_user_api', kwargs={'shop_pk': self.pk})
 
     def get_upcoming_day(self):
         today = timezone.localdate()
@@ -153,7 +157,7 @@ class ShopUser(StatusModel):
     @property
     def api_url(self):
         return reverse(
-            'shop:shop_user_detail_api',
+            'shopapi:shop_user_detail_api',
             kwargs={
                 'shop_pk': self.shop.pk,
                 'shop_user_pk': self.pk,
@@ -182,7 +186,7 @@ class Machine(StatusModel):
     @property
     def api_url(self):
         return reverse(
-            'shop:machine_detail_api',
+            'shopapi:machine_detail_api',
             kwargs={
                 'shop_pk': self.shop.pk,
                 'machine_pk': self.pk,
@@ -248,9 +252,12 @@ class MaintenanceScheduleItem(StatusModel):
             days from today.
         '''
         just_archived = (
-            self._original_status != self.Status.DONE
-            and self.status == self.Status.DONE
+            self._original_status != self.Status.ARCHIVED
+            and self.status == self.Status.ARCHIVED
         )
+
+        super().save(*args, **kwargs)
+        self._original_status = self.status
 
         if just_archived:
             self.delete_incomplete_log_items()
@@ -258,7 +265,7 @@ class MaintenanceScheduleItem(StatusModel):
     @property
     def api_url(self):
         return reverse(
-            'shop:maintenance_schedule_detail_api',
+            'shopapi:maintenance_schedule_detail_api',
             kwargs={
                 'shop_pk': self.shop.pk,
                 'item_pk': self.pk,
@@ -275,7 +282,7 @@ class MaintenanceScheduleItem(StatusModel):
         self.maintenancelogentry_set.exclude(status='done').delete()
 
 
-class MaintenanceLogEntry(StatusModel):
+class MaintenanceLogEntry(models.Model):
     ''' Represents an instance of a maintenance schedule item being performed.
 
         It is performed by a user on a specific date and time.
@@ -284,6 +291,11 @@ class MaintenanceLogEntry(StatusModel):
         should decide via UX if a deleted machine or user should have their maintenance
         log removed entirely from the record or if the log should be kept.
     '''
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Track the initial status loaded from the DB (None for unsaved new objects)
+        self._original_status = self.status if self.pk else None
 
     class Status(models.TextChoices):
         PENDING = 'pending', 'Pending'
@@ -400,7 +412,7 @@ class MaintenanceLogEntry(StatusModel):
     @property
     def api_url(self):
         return reverse(
-            'shop:log_item_detail_api',
+            'shopapi:log_item_detail_api',
             kwargs={
                 'shop_pk': self.item.shop.pk,
                 'item_pk': self.item.pk,

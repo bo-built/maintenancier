@@ -8,4 +8,5 @@ urlpatterns = [
     path('', TemplateView.as_view(template_name='home.html'), name='home'),
     path('', include('appuser.urls')),
     path('', include('shop.urls')),
+    path('', include('shop.api_urls')),
 ]

@@ -7,7 +7,7 @@
 {% block page_content %}
 
 <div x-data="dashboardApp" x-init="initDashoard(
-    '{% url 'shop:shop_detail_api' shop_pk=shop.pk %}',
+    '{% url 'shopapi:shop_detail_api' shop_pk=shop.pk %}',
 )">
 
 <div class="row">
@@ -16,21 +16,34 @@
             <h1>{{shop.name}}</h1>
         </div>
         <div>
-        <button type="button" class="btn btn-primary" @click="openTaskModal()">
-            + New Maintenance Task
-        </button>
+            <button type="button" class="btn btn-primary btn-full" @click="openTaskModal()">
+                + New Maintenance Task
+            </button>
         </div>
-        <div id="loading_machines">
-            <h2>loading machines ...</h2>
-            <div class="spinner-border text-info" role="status">
-                <span class="visually-hidden"></span>
-            </div>
-        </div>
-        <div id="machines_loaded" class="hidden">
+        <div>
             <h2>Shop Machines</h2>
-            <template x-for="machine in machines" :key="machine.pk">
-                <div x-text="machine.name"></div>
-            </template>
+            <div id="loading_machines">
+                <h3>loading machines ...</h3>
+                <div class="spinner-border text-info" role="status">
+                    <span class="visually-hidden"></span>
+                </div>
+            </div>
+            <div id="machines_loaded" class="hidden">
+                <template x-for="machine in machines" :key="machine.pk">
+                    <a href="" class="btn btn-info btn-full link-btn-list" x-text="machine.name"></div>
+                </template>
+                <div class="">
+                    <template x-if="machines.length === 0">
+                        <div class="alert alert-warning link-btn-list">This shop doesn't have any machines yet</div>
+                    </template>
+                    <div>
+                        <button type="button" class="btn btn-primary btn-full link-btn-list" @click="openMachineModal()">
+                            + New Machine
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
     <div class="col-md-9">
@@ -56,6 +69,7 @@
 
     {% include 'shop/includes/add_task_modal.html' %}
     {% include 'shop/includes/dismiss_task_modal.html' %}
+    {% include 'shop/includes/create_machine_modal.html' %}
 
 </div>
 {% endblock %}

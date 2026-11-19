@@ -1,5 +1,5 @@
 from django import forms
-from shop.models import MaintenanceScheduleItem, Machine
+from shop.models import MaintenanceScheduleItem, Machine, Shop
 
 
 class NameChoiceField(forms.ModelChoiceField):
@@ -7,11 +7,48 @@ class NameChoiceField(forms.ModelChoiceField):
         return obj.name
 
 
+class ShopForm(forms.ModelForm):
+    class Meta:
+        model = Shop
+        fields = [
+            'name',
+        ]
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-select',
+                'autocomplete': 'off',
+            }),
+        }
+
+
+class MachineForm(forms.ModelForm):
+    class Meta:
+        model = Machine
+        fields = [
+            'name',
+        ]
+
+        labels = {
+            'name': 'Machine Name',
+        }
+
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-select',
+                'autocomplete': 'off',
+                'placeholder': 'Machine name ...',
+            }),
+        }
+
+
 class MaintenanceScheduleItemForm(forms.ModelForm):
 
     machine = NameChoiceField(
         queryset=Machine.objects.none(),
-        widget=forms.Select(attrs={'class': 'form-select'}),
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+            'autofocus': True,
+        }),
         required=False,
         empty_label='General Shop',
     )
@@ -32,6 +69,7 @@ class MaintenanceScheduleItemForm(forms.ModelForm):
             'name': forms.TextInput(attrs={
                 'class': 'form-select',
                 'autocomplete': 'off',
+                'placeholder': 'The name of this task ...'
             }),
             'interval': forms.Select(attrs={
                 'class': 'form-select',

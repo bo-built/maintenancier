@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title_tag %}Shops{% endblock %}{% block extra_header %}
+	<script src="{% static 'js/utils.js' %}"></script>
+	<script src="{% static 'js/shop/user_dashboard.js' %}"></script>
+{% endblock %}
+{% block page_content %}
+
+<div x-data="userDashboardApp" x-init="initDashoard(
+    '{% url 'shopapi:shop_api' %}',
+)">
+<div class="row">
+    <div class="col-md-4">
+
+        <div class="card" style="width: 100%;">
+            <div class="card-body">
+                <h2>Welcome to Maintenancier</h2>
+                <p class="card-text">
+                    Select one of your shops to see your maintenance schedule
+                    or create a new shop.
+                </p>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-primary btn-full" @click="openShopModal()">+ New Shop</button>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <h2>Your Shops</h2>
+        <div id="shops_loading">
+            <h3>loading  ...</h3>
+            <div class="spinner-border text-info" role="status">
+                <span class="visually-hidden"></span>
+            </div>
+        </div>
+        <div id="shops_loaded" class="hidden">
+            <template x-for="shop in shops" :key="shop.pk">
+                <div class="link-btn-list">
+                    <a :href="shop.shop_dashboard_url" class="btn btn-info btn-full" x-text="shop.name"></a>
+                </div>
+            </template>
+
+            <template x-if="shops.length === 0">
+                <div class="alert alert-warning">
+                    You don't have any shops yet!
+                </div>
+            </template>
+        </div>
+    </div>
+</div>
+{% include 'shop/includes/create_shop_modal.html' %}
+</div>
+{% endblock %}

@@ -9,6 +9,57 @@ document.addEventListener('alpine:init', () => {
         dismissTaskModal: null,
         dismissTargetGroup: [],
         dismissTargetTask: {'name': 'tmp'},
+        createMachineModal: null,
+
+        openMachineModal() {
+            this.createMachineModal.show();
+        },
+
+        closeMachineModal() {
+            this.createMachineModal.hide();
+        },
+
+        async submitNewMachine(formEl) {
+            const formData = new FormData(formEl);
+            const payload = Object.fromEntries(formData.entries());
+
+            Object.keys(payload).forEach((key) => {
+                if (payload[key] === '') {
+                    payload[key] = null;
+                }
+            });
+
+            formEl.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+                payload[cb.name] = cb.checked;
+            });
+            try {
+                const response = await fetch(this.shop.machine_api_url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    console.error('Validation errors:', data);
+                    return;
+                }
+
+                formEl.reset();
+                const select = document.getElementById('id_machine');
+                const option = new Option(data.machine.name, data.machine.pk, true, true);
+                select.add(option);
+                this.machines.push(data.machine);
+                this.closeMachineModal();
+
+            } catch (error) {
+                console.error('Failed to create maintenance item:', error);
+            }
+        },
 
         openTaskModal() {
             this.createTaskModal.show();
@@ -186,6 +237,14 @@ document.addEventListener('alpine:init', () => {
 
             this.dismissTaskModal = new bootstrap.Modal(this.$refs.dismissTaskModal);
             this.$refs.dismissTaskModal.addEventListener('hide.bs.modal', () => {
+                if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                }
+            });
+
+
+            this.createMachineModal = new bootstrap.Modal(this.$refs.createMachineModal);
+            this.$refs.createMachineModal.addEventListener('hide.bs.modal', () => {
                 if (document.activeElement instanceof HTMLElement) {
                     document.activeElement.blur();
                 }

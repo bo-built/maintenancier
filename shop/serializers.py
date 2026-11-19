@@ -88,6 +88,7 @@ class shopSerializer(serializers.HyperlinkedModelSerializer):
         fields = [
             'pk',
             'name',
+            'shop_dashboard_url',
             'shop_api_url',
             'machine_api_url',
             'schedule_api_url',

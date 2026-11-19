@@ -5,7 +5,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-from shop.models import ShopUser, Machine, MaintenanceLogEntry, MaintenanceScheduleItem
+from shop.models import (
+    ShopUser,
+    Machine,
+    MaintenanceLogEntry,
+    MaintenanceScheduleItem,
+)
 
 from shop import serializers
 
@@ -92,7 +97,7 @@ class ShopApi(ShopUserBaseApi):
                         {
                             'status': 'ok',
                             'message': 'Shop created',
-                            'data': serializer.data
+                            'shop': serializer.data
                         },
                         status=status.HTTP_201_CREATED,
                     )
