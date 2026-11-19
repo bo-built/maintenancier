@@ -42,7 +42,7 @@
             </div>
          </div>
          <div id="schedule_loaded" class="hidden">
-            <template x-for="(group, key) in schedule" :key="key">
+        <template x-for="(group, key) in schedule" :key="key">
             <!-- Single root wrapper required by Alpine x-for -->
             <div class="schedule_block">
                 <h4 x-text="group.title"></h4>

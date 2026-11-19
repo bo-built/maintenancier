@@ -7,6 +7,28 @@ from django.urls import reverse
 from django.utils import timezone
 
 
+class StatusModel(models.Model):
+
+    class Status(models.TextChoices):
+        ACTIVE = 'active', 'Active'
+        ARCHIVED = 'archived', 'Archived'
+
+    class Meta:
+        abstract = True
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Track the initial status loaded from the DB (None for unsaved new objects)
+        self._original_status = self.status if self.pk else None
+
+    status = models.CharField(
+        max_length=8,
+        choices=Status.choices,
+        default='active',
+        db_index=True,
+    )
+
+
 class Shop(models.Model):
     ''' Main object for the app - representes a physical shop or org that
         requires routine maintenance that needs to be scheduled and logged
@@ -41,19 +63,22 @@ class Shop(models.Model):
         overdue = MaintenanceLogEntry.objects.filter(
             due_date__lte=today,
             status__in=['overdue', 'pending'],
-            item__shop=self
+            item__shop=self,
+            item__status='active',
         )
 
         due_today = MaintenanceLogEntry.objects.filter(
             due_date=today,
             status__in=['overdue', 'pending'],
-            item__shop=self
+            item__shop=self,
+            item__status='active',
         )
 
         done_today = MaintenanceLogEntry.objects.filter(
             due_date__lte=today,
             status__in=['done'],
-            item__shop=self
+            item__shop=self,
+            item__status='active',
         )
 
         result = overdue.union(due_today, done_today).order_by('due_date').all()
@@ -84,6 +109,7 @@ class Shop(models.Model):
             due_date__lte=week_end,
             item__shop=self,
             item__interval__gt=1,
+            item__status='active',
         ).all()
 
     def get_upcoming_thirty_days_excluding_this_week(self):
@@ -95,10 +121,11 @@ class Shop(models.Model):
             due_date__lte=month_end,
             item__shop=self,
             item__interval__gt=1,
+            item__status='active',
         ).all()
 
 
-class ShopUser(models.Model):
+class ShopUser(StatusModel):
     ''' Links a User to a shop
         Users can have multiple shops and shops can have multiple users
     '''
@@ -115,7 +142,6 @@ class ShopUser(models.Model):
 
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    active = models.BooleanField(default=True, db_index=True)
 
     class Meta:
         unique_together = [('shop', 'user'), ]
@@ -135,14 +161,13 @@ class ShopUser(models.Model):
         )
 
 
-class Machine(models.Model):
+class Machine(StatusModel):
     ''' Represents physical tool or machine that belongs to a shop.
 
         It may or may not require maintenance log items.
     '''
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE)
     name = models.CharField(max_length=250)
-    active = models.BooleanField(default=True, db_index=True)
 
     def __str__(self):
         return 'Machine <pk: {}> -- {} // {}'.format(
@@ -165,7 +190,7 @@ class Machine(models.Model):
         )
 
 
-class MaintenanceScheduleItem(models.Model):
+class MaintenanceScheduleItem(StatusModel):
     ''' Represents a maintenance task that needs to be scheduled and repeated
         at a regular interval. It can belong to a specific machine or to the
         shop in general.
@@ -179,14 +204,14 @@ class MaintenanceScheduleItem(models.Model):
         entirely from the record or if the log should be kept.
     '''
     INTERVAL_CHOICES = [
-        (1, 'daily'),
-        (7, 'weekly'),
-        (14, 'every 2 weeks'),
-        (30, 'monthly'),
-        (60, 'every 2 months'),
-        (90, 'every 3 months'),
-        (120, 'every 6 months'),
-        (365, 'annually'),
+        (1, 'Daily'),
+        (7, 'Weekly'),
+        (14, 'Every 2 weeks'),
+        (30, 'Monthly'),
+        (60, 'Every 2 months'),
+        (90, 'Every 3 months'),
+        (120, 'Every 6 months'),
+        (365, 'Annually'),
     ]
 
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE)
@@ -215,6 +240,21 @@ class MaintenanceScheduleItem(models.Model):
             self.get_interval_display(),
         )
 
+    def save(self, *args, **kwargs):
+        ''' If an item is completed or dismissed, the next log item needs to be
+            scheduled or updated.
+
+            Create or update a child item and set its due date to item.interval
+            days from today.
+        '''
+        just_archived = (
+            self._original_status != self.Status.DONE
+            and self.status == self.Status.DONE
+        )
+
+        if just_archived:
+            self.delete_incomplete_log_items()
+
     @property
     def api_url(self):
         return reverse(
@@ -231,8 +271,11 @@ class MaintenanceScheduleItem(models.Model):
             return self.machine.name
         return 'Shop'
 
+    def delete_incomplete_log_items(self):
+        self.maintenancelogentry_set.exclude(status='done').delete()
 
-class MaintenanceLogEntry(models.Model):
+
+class MaintenanceLogEntry(StatusModel):
     ''' Represents an instance of a maintenance schedule item being performed.
 
         It is performed by a user on a specific date and time.
@@ -247,6 +290,7 @@ class MaintenanceLogEntry(models.Model):
         DONE = 'done', 'Done'
         OVERDUE = 'overdue', 'Overdue'
         DISMISSED = 'dismissed', 'Dismissed'
+
     source = models.ForeignKey(
         'MaintenanceLogEntry',
         blank=True,
@@ -279,11 +323,6 @@ class MaintenanceLogEntry(models.Model):
             self.due_date,
             self.item.shop
         )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Track the initial status loaded from the DB (None for unsaved new objects)
-        self._original_status = self.status if self.pk else None
 
     def save(self, *args, **kwargs):
         ''' If an item is completed or dismissed, the next log item needs to be

@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-from shop.models import ShopUser, Machine, MaintenanceLogEntry
+from shop.models import ShopUser, Machine, MaintenanceLogEntry, MaintenanceScheduleItem
 
 from shop import serializers
 
@@ -163,7 +163,7 @@ class ShopApi(ShopUserBaseApi):
 
 class MachineApi(ShopUserBaseApi):
     def get(self, request, shop_pk):
-        machines = self.shop.machine_set.all()
+        machines = self.shop.machine_set.filter(status='active').all()
         serializer = serializers.machineSerializer(machines, many=True)
         return Response(serializer.data)
 
@@ -272,13 +272,31 @@ class MaintenanceScheduleApi(ShopUserBaseApi):
             return Response(data)
 
     def post(self, request, shop_pk):
-        return Response(
-            {
-                'status': 'error',
-                'message': 'This method is not implemented yet',
-            },
-            status=status.HTTP_501_NOT_IMPLEMENTED
-        )
+        try:
+            new_item = MaintenanceScheduleItem(shop=self.shop)
+            serializer = serializers.maintenanceScheduleItemSerializer(
+                new_item,
+                data=request.data,
+                partial=True
+            )
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    {
+                        'status': 'ok',
+                        'message': 'Item created',
+                        'machine': serializer.data,
+                    },
+                )
+        except:  # noqa TO DO
+            return Response(
+                {
+                    'status': 'error',
+                    'message': 'Data error',
+                    'errors': serializer.errors,
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     def patch(self, request, shop_pk, item_pk):
         return Response(

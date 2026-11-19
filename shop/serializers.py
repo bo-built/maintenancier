@@ -19,6 +19,12 @@ class shopUserSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class maintenanceScheduleItemSerializer(serializers.HyperlinkedModelSerializer):
+    machine = serializers.PrimaryKeyRelatedField(
+        queryset=Machine.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+
     class Meta:
         model = MaintenanceScheduleItem
         fields = [
@@ -26,6 +32,8 @@ class maintenanceScheduleItemSerializer(serializers.HyperlinkedModelSerializer):
             'name',
             'description',
             'source',
+            'interval',
+            'machine',
         ]
 
 

@@ -1,6 +1,7 @@
 from django.urls import reverse
 from shop.models import Machine
 from shop.test_utils import PopulatedTestBase
+from django.utils import timezone
 
 
 class ShopTestCaseWithData(PopulatedTestBase):
@@ -161,7 +162,16 @@ class MaintenanceScheduleApiTest(ShopTestCaseWithData):
         pass
 
     async def test_successful_maintenance_schedule_post(self):
-        ''' Verify method not implemented '''
+        ''' Verify successful post to maintenance schedule creates a new item '''
+
+        post_data = {
+            'machine': self.machines[1].pk,
+            'interval': 7,
+            'description': 'this is a description',
+            'name': 'item name',
+            'start_date': timezone.localdate(),
+        }
+
         url = reverse(
             'shop:maintenance_schedule_api',
             kwargs={
@@ -170,14 +180,10 @@ class MaintenanceScheduleApiTest(ShopTestCaseWithData):
         )
         response = await self.async_client.post(
             url,
-            data={},
+            data=post_data,
             content_type='application/json',
         )
-        self.assertEqual(response.status_code, 501)
-        self.assertEqual(
-            response.data['message'],
-            'This method is not implemented yet'
-        )
+        self.assertEqual(response.status_code, 200)
 
     async def test_successful_maintenance_schedule_patch(self):
         ''' Verify method not implemented '''

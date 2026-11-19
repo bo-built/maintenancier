@@ -18,11 +18,43 @@ document.addEventListener('alpine:init', () => {
             this.createTaskModal.hide();
         },
 
-        async submitTask() {
-            // 1. Send your fetch POST/PATCH request here...
+        async submitNewTask(formEl) {
+            const formData = new FormData(formEl);
+            const payload = Object.fromEntries(formData.entries());
 
-            // 2. Close the modal automatically once saved
-            this.closeTaskModal();
+            Object.keys(payload).forEach((key) => {
+                if (payload[key] === '') {
+                    payload[key] = null;
+                }
+            });
+
+            formEl.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+                payload[cb.name] = cb.checked;
+            });
+            try {
+                const response = await fetch(this.shop.schedule_api_url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    console.error('Validation errors:', data);
+                    return;
+                }
+
+                formEl.reset();
+                this.fetchToDoSchedule();
+                this.closeTaskModal();
+
+            } catch (error) {
+                console.error('Failed to create maintenance item:', error);
+            }
         },
 
         confirmDismissTask(dismissTargetGroup, dismissTargetTask) {
@@ -68,9 +100,9 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        async fetchThisUser(user_api_url) {
+        async fetchThisUser() {
             try {
-                const response = await fetch(user_api_url);
+                const response = await fetch(this.shop.shopuser_api_url);
                 this.user = await response.json();
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -80,9 +112,9 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        async fetchMachines(machine_api_url) {
+        async fetchMachines() {
             try {
-                const response = await fetch(machine_api_url);
+                const response = await fetch(this.shop.machine_api_url);
                 this.machines = await response.json();
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -92,9 +124,9 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        async fetchToDoSchedule(schedule_api_url) {
+        async fetchToDoSchedule() {
             try {
-                const response = await fetch(schedule_api_url);
+                const response = await fetch(this.shop.schedule_api_url);
                 this.schedule = await response.json();
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -166,9 +198,9 @@ document.addEventListener('alpine:init', () => {
             } catch (error) {
                 console.error('Error fetching data:', error);
             } finally {
-                this.fetchMachines(this.shop.machine_api_url);
-                this.fetchToDoSchedule(this.shop.schedule_api_url);
-                this.fetchThisUser(this.shop.shopuser_api_url);
+                this.fetchMachines();
+                this.fetchToDoSchedule();
+                this.fetchThisUser();
             }
         },
 
