@@ -42,16 +42,28 @@ class MachineForm(forms.ModelForm):
 
 
 class MaintenanceScheduleItemForm(forms.ModelForm):
-
     machine = NameChoiceField(
         queryset=Machine.objects.none(),
         widget=forms.Select(attrs={
             'class': 'form-select',
             'autofocus': True,
         }),
-        required=False,
-        empty_label='General Shop',
+        required=True,
     )
+
+    def __init__(self, *args, **kwargs):
+        shop = kwargs.pop('shop', None)
+        super().__init__(*args, **kwargs)
+
+        self.fields['name'].required = True
+        self.fields['start_date'].required = True
+        self.fields['interval'].required = True
+        self.fields['machine'].required = True
+        self.fields['description'].required = False
+
+        if shop is not None:
+            self.fields['machine'].queryset = Machine.objects.filter(
+                shop=shop)
 
     class Meta:
         model = MaintenanceScheduleItem
@@ -83,19 +95,6 @@ class MaintenanceScheduleItemForm(forms.ModelForm):
                 'type': 'date',  # Renders native browser date picker
             }),
         }
-
-    def __init__(self, *args, **kwargs):
-        shop = kwargs.pop('shop', None)
-        super().__init__(*args, **kwargs)
-
-        self.fields['name'].required = True
-        self.fields['start_date'].required = True
-        self.fields['interval'].required = True
-        self.fields['machine'].required = False
-        self.fields['description'].required = False
-
-        if shop is not None:
-            self.fields['machine'].queryset = Machine.objects.filter(shop=shop)
 
 
 class MachineMaintenanceScheduleItemForm(forms.ModelForm):

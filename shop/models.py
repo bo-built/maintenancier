@@ -186,6 +186,7 @@ class Machine(StatusModel):
     '''
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE)
     name = models.CharField(max_length=250)
+    is_shop = models.BooleanField(default=False)
 
     def __str__(self):
         return 'Machine <pk: {}> -- {} // {}'.format(
@@ -259,7 +260,6 @@ class MaintenanceScheduleItem(StatusModel):
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE)
     machine = models.ForeignKey(
         Machine,
-        blank=True,
         null=True,
         related_name='maintenance_items',
         on_delete=models.SET_NULL
@@ -482,3 +482,15 @@ def create_first_log_instance(sender, instance, created, **kwargs):
             due_date=next_due,
         )
         next_entry.save()
+
+
+@receiver(post_save, sender=Shop)
+def create_general_shop_machine(sender, instance, created, **kwargs):
+    ''' When a new shop is created, initiate a "general shop" machine
+    '''
+    if created:
+        Machine.objects.create(
+            shop=instance,
+            name='General Shop',
+            is_shop=True,
+        )
