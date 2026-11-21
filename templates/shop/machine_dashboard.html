@@ -14,6 +14,7 @@
     </div>
     <div class="col-12"><h2>{{machine.name}}</h2></div>
 </div>
+
 <div x-data="machineApp" x-init="initDashoard(
     '{{machine.api_url}}',
 )">
@@ -25,7 +26,7 @@
     </div>
 </div>
 <div class="row hidden" id="log_loaded">
-    <div class="col-md-4">
+    <div class="col-md-4 order-2 order-md-1">
         <h3>Scheduled Maintenance Items</h3>
         <div class="pad-bottom">
             <button type="button" class="btn btn-primary btn-full" @click="openTaskModal()">
@@ -36,37 +37,7 @@
             <div class="card mb-3"
             x-show="item.status=='active'"
             :class="!selectedTask ? 'bg-info' : (selectedTask === item ? 'bg-success' : 'bg-light')">
-                <div class="card-header" x-text="item.name"></div>
-                <div x-show="item!=editingTask"> <!-- show static content by default, toggle off when form is shown for this item -->
-                    <div class="card-body">
-                        <p class="card-title emph" x-text="item.display_interval"></p>
-                        <p class="card-text" x-text="item.description"></p>
-                        <p>Next Scheduled: <span x-text="new Date(item.next_scheduled.due_date).toLocaleDateString(undefined, { timeZone: 'UTC' })"></span></p>
-                    </div>
-                    <div class="card-footer">
-                        <button class="btn btn-warning btn-sm"
-                            @click="setEditingTask(item)">edit</button>
-                        <button class="btn btn-success btn-sm float-right"
-                            @click="setSelectedTask(item)">filter</button>
-                    </div>
-                </div>
-                <div x-show="item==editingTask"> <!-- show when edit is clicked, hide after save or cancel is clicked -->
-                    <form method="POST" @submit.prevent="editTask($event.target, item)">
-                        {% csrf_token %}
-                        <div class="card-body">
-                            {{edit_form.as_p}}
-                        </div>
-                        <div class="card-footer">
-                                <button type="button" class="btn btn-info btn-sm"
-                                    @click="unSetEditingTask(item)">cancel</button>
-                            <button type="submit" class="btn btn-warning btn-sm float-right">update</button>
-                        </div>
-                    </form>
-                    <div class="card-footer">
-                        <button class="btn btn-danger btn-full btn-sm"
-                            @click="confirmArchiveTask(item)">Archive</button>
-                    </div>
-                </div>
+                {% include 'shop/includes/machine_maintenance_item_card.html' %}
             </div>
         </template>
         <div x-show="!machine.is_shop">
@@ -74,26 +45,9 @@
                 @click="confirmArchiveMachine()">Archive Machine</button>
         </div>
     </div>
-    <div class="col-8">
+    <div class="col-md-8 order-1 order-md-2">
         <h3>Maintenance Log</h3>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Item</th>
-                    <th>Done By</th>
-                    <th>Date Done</th>
-                </tr>
-            </thead>
-            <template x-for="log_item in log_entries.filter(entry => !selectedTask || entry.task.pk == selectedTask.pk)" :key="log_item.pk">
-                <tbody>
-                    <tr>
-                        <td x-text="log_item.task_name"></td>
-                        <td x-text="log_item.done_by.name"></td>
-                        <td x-text="new Date(log_item.done_date).toLocaleDateString()"></td>
-                    </tr>
-                </tbody>
-            </template>
-        </table>
+        {% include 'shop/includes/log_table.html' %}
     </div>
 </div>
 {% include 'shop/includes/add_task_modal.html' %}
