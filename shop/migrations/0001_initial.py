@@ -75,7 +75,7 @@ class Migration(migrations.Migration):
                 ('status', models.CharField(choices=[('pending', 'Pending'), ('done', 'Done'), ('overdue', 'Overdue'), ('dismissed', 'Dismissed')], db_index=True, default='pending', max_length=15)),
                 ('done_date', models.DateTimeField(blank=True, null=True)),
                 ('notes', models.TextField(blank=True, null=True)),
-                ('_item_name', models.CharField(blank=True, max_length=300, null=True)),
+                ('_task_name', models.CharField(blank=True, max_length=300, null=True)),
                 ('_machine_name', models.CharField(blank=True, max_length=300, null=True)),
                 ('_description', models.TextField(blank=True, null=True)),
                 ('done_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='shop.shopuser')),

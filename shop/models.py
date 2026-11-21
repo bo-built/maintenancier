@@ -181,6 +181,9 @@ class ShopUser(StatusModel):
 
 class Machine(StatusModel):
     ''' Represents physical tool or machine that belongs to a shop.
+        If is_shop is True, the instance represents the actual shop. This
+        allows maintenance tasks to be created for the general shop that are
+        not tied to a specific machine.
 
         It may or may not require maintenance log items.
     '''
@@ -368,6 +371,8 @@ class LogEntry(models.Model):
         OVERDUE = 'overdue', 'Overdue'
         DISMISSED = 'dismissed', 'Dismissed'
 
+    # source is the previous iteration that this task was generated from, if
+    # it is not the first instance of a task's log entries
     source = models.ForeignKey(
         'LogEntry',
         blank=True,
@@ -391,7 +396,7 @@ class LogEntry(models.Model):
     done_by = models.ForeignKey(ShopUser, blank=True, null=True, on_delete=models.SET_NULL)
     done_date = models.DateTimeField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
-    _item_name = models.CharField(max_length=300, blank=True, null=True)
+    _task_name = models.CharField(max_length=300, blank=True, null=True)
     _machine_name = models.CharField(max_length=300, blank=True, null=True)
     _description = models.TextField(blank=True, null=True)
 
@@ -426,7 +431,7 @@ class LogEntry(models.Model):
             if not force_done_date:
                 self.done_date = today
             self._description = self.task.description
-            self._item_name = self.task.name
+            self._task_name = self.task.name
             due_next = today + timedelta(days=self.task.interval)
             if self.task.machine:
                 self._machine_name = self.task.machine.name
@@ -467,8 +472,8 @@ class LogEntry(models.Model):
         return self.task.get_interval_display()
 
     @property
-    def item_name(self):
-        return self._item_name or self.task.name
+    def task_name(self):
+        return self._task_name or self.task.name
 
     @property
     def machine_name(self):

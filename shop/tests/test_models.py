@@ -40,7 +40,7 @@ class TestMaintenanceItems(PopulatedTestBase):
         log_item.save()
         log_item.refresh_from_db()
         self.assertEqual(log_item._description, log_item.task.description)
-        self.assertEqual(log_item._item_name, log_item.task.name)
+        self.assertEqual(log_item._task_name, log_item.task.name)
         self.assertEqual(log_item._machine_name, log_item.task.machine.name)
 
     def test_archive_task(self):

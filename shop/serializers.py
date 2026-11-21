@@ -83,7 +83,7 @@ class LogEntrySerializer(serializers.HyperlinkedModelSerializer):
             'notes',
             'task',
             'interval',
-            'item_name',
+            'task_name',
             'machine_name',
             'machine_pk',
             'description',
