@@ -34,22 +34,22 @@ class MachineAdmin(admin.ModelAdmin):
     form = MachineForm
 
 
-class MaintenanceScheduleItemForm(forms.ModelForm):
-    model = models.MaintenanceScheduleItem
+class MaintenanceTaskForm(forms.ModelForm):
+    model = models.MaintenanceTask
     fields = '__all__'
 
 
-@admin.register(models.MaintenanceScheduleItem)
-class MaintenanceScheduleItemAdmin(admin.ModelAdmin):
-    form = MaintenanceScheduleItemForm
+@admin.register(models.MaintenanceTask)
+class MaintenanceTaskAdmin(admin.ModelAdmin):
+    form = MaintenanceTaskForm
 
 
-class MaintenanceLogEntryForm(forms.ModelForm):
-    model = models.MaintenanceLogEntry
+class LogEntryForm(forms.ModelForm):
+    model = models.LogEntry
     fields = '__all__'
 
 
-@admin.register(models.MaintenanceLogEntry)
-class MaintenanceLogEntryAdmin(admin.ModelAdmin):
-    form = MaintenanceLogEntryForm
-    list_filter = ['status', 'done_date', 'due_date', 'item__shop']
+@admin.register(models.LogEntry)
+class LogEntryAdmin(admin.ModelAdmin):
+    form = LogEntryForm
+    list_filter = ['status', 'done_date', 'due_date', 'task__shop']

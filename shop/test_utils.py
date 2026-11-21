@@ -4,8 +4,8 @@ from shop.models import (
     Shop,
     ShopUser,
     Machine,
-    MaintenanceScheduleItem,
-    MaintenanceLogEntry,
+    MaintenanceTask,
+    LogEntry,
 )
 
 
@@ -82,14 +82,14 @@ def generate_test_data():
     log_items = []
 
     for mi in _maintenance_items:
-        new_item = MaintenanceScheduleItem.objects.create(
+        new_item = MaintenanceTask.objects.create(
             shop=shop,
             name=mi['name'],
             interval=mi['interval'],
             machine=mi['machine'],
         )
         maintenance_items.append(new_item)
-        log_items.append(MaintenanceLogEntry.objects.get(item=new_item))
+        log_items.append(LogEntry.objects.get(task=new_item))
 
     return (
         user,

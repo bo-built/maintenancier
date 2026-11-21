@@ -1,8 +1,8 @@
 from datetime import timedelta
 from django.utils import timezone
 from shop.models import (
-    MaintenanceScheduleItem,
-    MaintenanceLogEntry,
+    MaintenanceTask,
+    LogEntry,
 )
 from shop.test_utils import PopulatedTestBase
 
@@ -22,7 +22,7 @@ class TestMaintenanceItems(PopulatedTestBase):
         interval = 14
         today = timezone.localdate()
         start_date = today + timedelta(days=7)
-        new_maintenance_item = MaintenanceScheduleItem.objects.create(
+        new_maintenance_item = MaintenanceTask.objects.create(
             shop=self.shop,
             machine=self.machines[0],
             interval=interval,
@@ -30,7 +30,7 @@ class TestMaintenanceItems(PopulatedTestBase):
             start_date=start_date,
         )
 
-        expected_log_item = MaintenanceLogEntry.objects.filter(item=new_maintenance_item).first()
+        expected_log_item = LogEntry.objects.filter(task=new_maintenance_item).first()
         self.assertIsNotNone(expected_log_item)
         self.assertEqual(expected_log_item.due_date, start_date)
 
@@ -39,9 +39,9 @@ class TestMaintenanceItems(PopulatedTestBase):
         log_item.status = 'done'
         log_item.save()
         log_item.refresh_from_db()
-        self.assertEqual(log_item._description, log_item.item.description)
-        self.assertEqual(log_item._item_name, log_item.item.name)
-        self.assertEqual(log_item._machine_name, log_item.item.machine.name)
+        self.assertEqual(log_item._description, log_item.task.description)
+        self.assertEqual(log_item._item_name, log_item.task.name)
+        self.assertEqual(log_item._machine_name, log_item.task.machine.name)
 
     def test_archive_task(self):
         test_item = self.maintenance_items[2]

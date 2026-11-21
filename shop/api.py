@@ -9,8 +9,8 @@ from rest_framework import status
 from shop.models import (
     ShopUser,
     Machine,
-    MaintenanceLogEntry,
-    MaintenanceScheduleItem,
+    LogEntry,
+    MaintenanceTask,
 )
 
 from shop import serializers
@@ -262,10 +262,10 @@ class MaintenanceScheduleApi(ShopUserBaseApi):
                     pk=machine_pk
                 )
                 instances = self.shop.get_machine_maintenance_history(machine)
-                serializer = serializers.maintenanceLogEntrySerializer(instances, many=True)
+                serializer = serializers.LogEntrySerializer(instances, many=True)
             else:
                 instances = self.shop.get_maintenance_history()
-                serializer = serializers.maintenanceLogEntrySerializer(instances, many=True)
+                serializer = serializers.LogEntrySerializer(instances, many=True)
             return Response(serializer.data)
         elif url_path == 'maintenance_schedule_by_interval_api':
             if interval == 'day':
@@ -285,7 +285,7 @@ class MaintenanceScheduleApi(ShopUserBaseApi):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            serializer = serializers.maintenanceLogEntrySerializer(instances, many=True)
+            serializer = serializers.LogEntrySerializer(instances, many=True)
             return Response(serializer.data)
         else:
             today = self.shop.get_upcoming_day()
@@ -294,23 +294,23 @@ class MaintenanceScheduleApi(ShopUserBaseApi):
             data = {
                 'today': {
                     'title': 'Due Today',
-                    'items': serializers.maintenanceLogEntrySerializer(today, many=True).data,
+                    'items': serializers.LogEntrySerializer(today, many=True).data,
                 },
                 'this_week': {
                     'title': 'Upcoming Within a Week',
-                    'items': serializers.maintenanceLogEntrySerializer(this_week, many=True).data,
+                    'items': serializers.LogEntrySerializer(this_week, many=True).data,
                 },
                 'this_month': {
                     'title': 'Upcoming Within a Month',
-                    'items': serializers.maintenanceLogEntrySerializer(this_month, many=True).data,
+                    'items': serializers.LogEntrySerializer(this_month, many=True).data,
                 },
             }
             return Response(data)
 
     def post(self, request, shop_pk):
         try:
-            new_item = MaintenanceScheduleItem(shop=self.shop)
-            serializer = serializers.maintenanceScheduleItemSerializer(
+            new_item = MaintenanceTask(shop=self.shop)
+            serializer = serializers.MaintenanceTaskSerializer(
                 new_item,
                 data=request.data,
                 partial=True
@@ -336,8 +336,8 @@ class MaintenanceScheduleApi(ShopUserBaseApi):
 
     def patch(self, request, shop_pk, item_pk):
         try:
-            item = MaintenanceScheduleItem.objects.get(pk=item_pk)
-            serializer = serializers.maintenanceScheduleItemSerializer(
+            item = MaintenanceTask.objects.get(pk=item_pk)
+            serializer = serializers.MaintenanceTaskSerializer(
                 item,
                 data=request.data,
                 partial=True
@@ -386,7 +386,7 @@ class MaintenanceScheduleApi(ShopUserBaseApi):
         )
 
 
-class MaintenanceLogEntryApi(ShopUserBaseApi):
+class LogEntryApi(ShopUserBaseApi):
     def get(self, request, shop_pk, item_pk):
         return Response(
             {
@@ -406,7 +406,7 @@ class MaintenanceLogEntryApi(ShopUserBaseApi):
         )
 
     def patch(self, request, shop_pk, item_pk, log_item_pk):
-        log_item = get_object_or_404(MaintenanceLogEntry, pk=log_item_pk)
+        log_item = get_object_or_404(LogEntry, pk=log_item_pk)
 
         done_by_data = request.data.get('done_by')
         save_kwargs = {}
@@ -425,7 +425,7 @@ class MaintenanceLogEntryApi(ShopUserBaseApi):
             save_kwargs['done_by'] = None
             save_kwargs['done_date'] = None
 
-        serializer = serializers.maintenanceLogEntrySerializer(
+        serializer = serializers.LogEntrySerializer(
             log_item,
             data=request.data,
             partial=True,

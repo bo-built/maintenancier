@@ -1,5 +1,5 @@
 from django import forms
-from shop.models import MaintenanceScheduleItem, Machine, Shop
+from shop.models import MaintenanceTask, Machine, Shop
 
 
 class NameChoiceField(forms.ModelChoiceField):
@@ -41,7 +41,7 @@ class MachineForm(forms.ModelForm):
         }
 
 
-class MachineMaintenanceScheduleItemForm(forms.ModelForm):
+class MachineMaintenanceTaskForm(forms.ModelForm):
     def __init__(self, *args, machine=None, **kwargs):
         super().__init__(*args, **kwargs)
         if machine is not None:
@@ -49,7 +49,7 @@ class MachineMaintenanceScheduleItemForm(forms.ModelForm):
             self.instance.machine = machine
 
     class Meta:
-        model = MaintenanceScheduleItem
+        model = MaintenanceTask
         fields = [
             'name',
             'interval',
@@ -78,7 +78,7 @@ class MachineMaintenanceScheduleItemForm(forms.ModelForm):
         }
 
 
-class MachineMaintenanceScheduleItemEditForm(forms.Form):
+class MachineMaintenanceTaskEditForm(forms.Form):
     name = forms.CharField(
         widget=forms.TextInput(attrs={
             'class': 'form-control',
@@ -88,7 +88,7 @@ class MachineMaintenanceScheduleItemEditForm(forms.Form):
     )
 
     interval = forms.ChoiceField(
-        choices=MaintenanceScheduleItem.INTERVAL_CHOICES,
+        choices=MaintenanceTask.INTERVAL_CHOICES,
         widget=forms.Select(attrs={
             'class': 'form-select',
             'autocomplete': 'off',

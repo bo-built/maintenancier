@@ -3,8 +3,8 @@ from shop.models import (
     Shop,
     ShopUser,
     Machine,
-    MaintenanceLogEntry,
-    MaintenanceScheduleItem,
+    LogEntry,
+    MaintenanceTask,
 )
 
 
@@ -18,12 +18,12 @@ class shopUserSerializer(serializers.HyperlinkedModelSerializer):
         ]
 
 
-class maintenanceLogEntryMicroSerializer(serializers.HyperlinkedModelSerializer):
+class LogEntryMicroSerializer(serializers.HyperlinkedModelSerializer):
 
     done_by = shopUserSerializer()
 
     class Meta:
-        model = MaintenanceLogEntry
+        model = LogEntry
         fields = [
             'pk',
             'due_date',
@@ -34,16 +34,16 @@ class maintenanceLogEntryMicroSerializer(serializers.HyperlinkedModelSerializer)
         ]
 
 
-class maintenanceScheduleItemSerializer(serializers.HyperlinkedModelSerializer):
+class MaintenanceTaskSerializer(serializers.HyperlinkedModelSerializer):
     machine = serializers.PrimaryKeyRelatedField(
         queryset=Machine.objects.all(),
         required=False,
         allow_null=True,
     )
-    next_scheduled = maintenanceLogEntryMicroSerializer()
+    next_scheduled = LogEntryMicroSerializer()
 
     class Meta:
-        model = MaintenanceScheduleItem
+        model = MaintenanceTask
         fields = [
             'pk',
             'status',
@@ -59,21 +59,21 @@ class maintenanceScheduleItemSerializer(serializers.HyperlinkedModelSerializer):
         ]
 
 
-class maintenanceScheduleItemMicroSerializer(serializers.HyperlinkedModelSerializer):
+class MaintenanceTaskMicroSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = MaintenanceScheduleItem
+        model = MaintenanceTask
         fields = [
             'pk',
         ]
 
 
-class maintenanceLogEntrySerializer(serializers.HyperlinkedModelSerializer):
+class LogEntrySerializer(serializers.HyperlinkedModelSerializer):
 
-    item = maintenanceScheduleItemMicroSerializer()
+    task = MaintenanceTaskMicroSerializer()
     done_by = shopUserSerializer()
 
     class Meta:
-        model = MaintenanceLogEntry
+        model = LogEntry
         fields = [
             'pk',
             'due_date',
@@ -81,7 +81,7 @@ class maintenanceLogEntrySerializer(serializers.HyperlinkedModelSerializer):
             'done_date',
             'status',
             'notes',
-            'item',
+            'task',
             'interval',
             'item_name',
             'machine_name',
@@ -92,7 +92,7 @@ class maintenanceLogEntrySerializer(serializers.HyperlinkedModelSerializer):
 
 
 class machineSerializer(serializers.HyperlinkedModelSerializer):
-    maintenance_items = maintenanceScheduleItemSerializer(
+    maintenance_items = MaintenanceTaskSerializer(
         many=True,
     )
 

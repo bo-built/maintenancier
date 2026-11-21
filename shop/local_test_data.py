@@ -7,8 +7,8 @@ from shop.models import (
     Shop,
     ShopUser,
     Machine,
-    MaintenanceScheduleItem,
-    MaintenanceLogEntry,
+    MaintenanceTask,
+    LogEntry,
 )
 
 local_test_data = {
@@ -49,7 +49,7 @@ local_test_data = {
             'machines': [
                 {
                     'name': 'DeWalt Compact Tablesaw',
-                    'maintenance_tasks': [
+                    'tasks': [
                         {
                             'name': 'Clean & Inspect Blades',
                             'interval': 7,
@@ -61,7 +61,7 @@ local_test_data = {
                 },
                 {
                     'name': 'Laguna Dust Collector',
-                    'maintenance_tasks': [
+                    'tasks': [
                         {
                             'name': 'Empty Dust Bag',
                             'interval': 1,
@@ -79,7 +79,7 @@ local_test_data = {
                 },
                 {
                     'name': 'Chisel Set',
-                    'maintenance_tasks': [
+                    'tasks': [
                         {
                             'name': 'Sharpen',
                             'interval': 14,
@@ -90,7 +90,7 @@ local_test_data = {
                 },
                 {
                     'name': 'Rikon Bandsaw',
-                    'maintenance_tasks': [
+                    'tasks': [
                         {
                             'name': 'Clean cabinet',
                             'interval': 30,
@@ -128,7 +128,7 @@ local_test_data = {
             'machines': [
                 {
                     'name': 'SawStop - single blade',
-                    'maintenance_tasks': [
+                    'tasks': [
                         {
                             'name': 'Clean & Inspect Blades',
                             'interval': 7,
@@ -159,7 +159,7 @@ local_test_data = {
                 },
                 {
                     'name': 'SawStop - dado stack',
-                    'maintenance_tasks': [
+                    'tasks': [
                         {
                             'name': 'Clean & Inspect Blades',
                             'interval': 7,
@@ -190,7 +190,7 @@ local_test_data = {
                 },
                 {
                     'name': 'Planer - Grizzly 12"',
-                    'maintenance_tasks': [
+                    'tasks': [
                         {
                             'name': 'Rotate and check blades',
                             'interval': 60,
@@ -210,7 +210,7 @@ local_test_data = {
                 },
                 {
                     'name': 'Jointer - Jet 8"',
-                    'maintenance_tasks': [
+                    'tasks': [
                         {
                             'name': 'Rotate and check blades',
                             'interval': 60,
@@ -229,7 +229,7 @@ local_test_data = {
                 },
                 {
                     'name': 'Powermatic Dust Cyclone (Jointers & Planers)',
-                    'maintenance_tasks': [
+                    'tasks': [
                         {
                             'name': 'Check duct system for clogs',
                             'interval': 30,
@@ -253,7 +253,7 @@ local_test_data = {
                 },
                 {
                     'name': 'Jet Dust Collector (SawStops)',
-                    'maintenance_tasks': [
+                    'tasks': [
                         {
                             'name': 'Clean Baffle',
                             'interval': 14,
@@ -278,7 +278,7 @@ local_test_data = {
 def generate_task(_task, shop, shopuser, machine, users):
     today = timezone.now()
     start_date = today + timedelta(days=_task['start_date_distance'])
-    task = MaintenanceScheduleItem.objects.create(
+    task = MaintenanceTask.objects.create(
         shop=shop,
         machine=machine,
         name=_task['name'],
@@ -299,14 +299,14 @@ def generate_task(_task, shop, shopuser, machine, users):
                 done_date
             )
         )
-        log_item = MaintenanceLogEntry(
-            item=task,
+        log_entry = LogEntry(
+            task=task,
             done_by=random.choice(users),
             done_date=done_date,
             due_date=done_date,
-            status=MaintenanceLogEntry.Status.DONE,
+            status=LogEntry.Status.DONE,
         )
-        log_item.save(bypass_child=True, force_done_date=True)
+        log_entry.save(bypass_child=True, force_done_date=True)
 
 
 def generate_shop_user(_user, shop):
@@ -324,8 +324,8 @@ def generate_shop_user(_user, shop):
 def generate_local_test_data():
     Shop.objects.all().delete()
     Machine.objects.all().delete()
-    MaintenanceScheduleItem.objects.all().delete()
-    MaintenanceLogEntry.objects.all().delete()
+    MaintenanceTask.objects.all().delete()
+    LogEntry.objects.all().delete()
 
     user = User.objects.get(pk=1)
 
@@ -344,5 +344,5 @@ def generate_local_test_data():
         for _machine in _shop['machines']:
             machine = Machine.objects.create(shop=shop, name=_machine['name'])
 
-            for _task in _machine['maintenance_tasks']:
+            for _task in _machine['tasks']:
                 generate_task(_task, shop, shopuser, machine, users)

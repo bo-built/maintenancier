@@ -49,9 +49,6 @@ document.addEventListener('alpine:init', () => {
                 }
 
                 formEl.reset();
-                const select = document.getElementById('id_machine');
-                const option = new Option(data.machine.name, data.machine.pk, true, true);
-                select.add(option);
                 this.machines.push(data.machine);
                 this.closeMachineModal();
 

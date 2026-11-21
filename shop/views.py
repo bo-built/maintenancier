@@ -4,8 +4,8 @@ from django.template import loader
 from appuser.views import ProtectedView
 from shop.models import ShopUser
 from shop.forms import (
-    MachineMaintenanceScheduleItemForm,
-    MachineMaintenanceScheduleItemEditForm,
+    MachineMaintenanceTaskForm,
+    MachineMaintenanceTaskEditForm,
     ShopForm,
     MachineForm,
 )
@@ -39,8 +39,8 @@ class MachineDashboard(ProtectedView):
         template = loader.get_template('shop/machine_dashboard.html')
         context = {
             'shop': shop,
-            'schedule_item_form': MachineMaintenanceScheduleItemForm(machine=machine),
-            'edit_form': MachineMaintenanceScheduleItemEditForm(),
+            'schedule_item_form': MachineMaintenanceTaskForm(machine=machine),
+            'edit_form': MachineMaintenanceTaskEditForm(),
             'machine': machine,
         }
         return HttpResponse(template.render(context, request))

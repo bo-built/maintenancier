@@ -52,12 +52,12 @@ urlpatterns = [
     ),
     path(
         'api/shop/<int:shop_pk>/schedule/<int:item_pk>/log/',
-        api_views.MaintenanceLogEntryApi.as_view(),
+        api_views.LogEntryApi.as_view(),
         name='log_item_api',
     ),
     path(
         'api/shop/<int:shop_pk>/schedule/<int:item_pk>/log/<int:log_item_pk>/',
-        api_views.MaintenanceLogEntryApi.as_view(),
+        api_views.LogEntryApi.as_view(),
         name='log_item_detail_api',
     ),
     path(
