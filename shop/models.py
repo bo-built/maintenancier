@@ -29,10 +29,27 @@ class StatusModel(models.Model):
     )
 
 
-class Shop(models.Model):
+class UpdatableModel(models.Model):
+
+    EDITABLE_FIELDS = []
+
+    class Meta:
+        abstract = True
+
+    def update(self, data):
+        for key, val in data.items():
+            if key in self.EDITABLE_FIELDS:
+                setattr(self, key, val)
+        self.save()
+
+
+class Shop(UpdatableModel):
     ''' Main object for the app - representes a physical shop or org that
         requires routine maintenance that needs to be scheduled and logged
     '''
+
+    EDITABLE_FIELDS = ['name', ]
+
     def __str__(self):
         return 'Shop <pk: {}> -- {}'.format(self.pk, self.name)
 

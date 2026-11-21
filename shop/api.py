@@ -1,10 +1,11 @@
 from datetime import date
-from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+
+from shop import services
 
 from shop.models import (
     ShopUser,
@@ -87,21 +88,19 @@ class ShopApi(ShopUserBaseApi):
         try:
             serializer = serializers.shopSerializer(data=request.data)
             if serializer.is_valid():
-                with transaction.atomic():
-                    serializer.save()
-                    shop_user = ShopUser(
-                        user=request.user,
-                        shop=serializer.instance
-                    )
-                    shop_user.save()
-                    return Response(
-                        {
-                            'status': 'ok',
-                            'message': 'Shop created',
-                            'shop': serializer.data
-                        },
-                        status=status.HTTP_201_CREATED,
-                    )
+                shop = services.create_shop(
+                    user=request.user,
+                    validated_data=serializer.data
+                )
+                serializer = serializers.shopSerializer(shop)
+                return Response(
+                    {
+                        'status': 'ok',
+                        'message': 'Shop created',
+                        'data': serializer.data,
+                    },
+                    status=status.HTTP_201_CREATED
+                )
             else:
                 return Response(
                     {
@@ -117,9 +116,9 @@ class ShopApi(ShopUserBaseApi):
                 {
                     'status': 'error',
                     'message': 'Data error',
-                    'errors': serializer.errors,
+                    'errors': 'Unknown Error',
                 },
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_418_IM_A_TEAPOT
             )
 
     def patch(self, request, shop_pk):
@@ -152,9 +151,9 @@ class ShopApi(ShopUserBaseApi):
                 {
                     'status': 'error',
                     'message': 'Data error',
-                    'errors': serializer.errors,
+                    'errors': 'Unknown Error',
                 },
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_418_IM_A_TEAPOT
             )
 
     def delete(self, request, shop_pk):
@@ -197,6 +196,15 @@ class MachineApi(ShopUserBaseApi):
                         'machine': serializer.data,
                     },
                 )
+            else:
+                return Response(
+                    {
+                        'status': 'error',
+                        'message': 'Data error',
+                        'errors': serializer.errors,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         except:  # noqa TO DO
             return Response(
                 {
@@ -204,7 +212,7 @@ class MachineApi(ShopUserBaseApi):
                     'message': 'Data error',
                     'errors': serializer.errors,
                 },
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_418_IM_A_TEAPOT
             )
 
     def patch(self, request, shop_pk, machine_pk):
@@ -223,15 +231,15 @@ class MachineApi(ShopUserBaseApi):
                         'machine': serializer.data,
                     },
                 )
-
-            return Response(
-                {
-                    'status': 'error',
-                    'message': 'Data error',
-                    'errors': serializer.errors,
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            else:
+                return Response(
+                    {
+                        'status': 'error',
+                        'message': 'Data error',
+                        'errors': serializer.errors,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                 )
         except:  # noqa TO DO
             return Response(
                 {
@@ -239,7 +247,7 @@ class MachineApi(ShopUserBaseApi):
                     'message': 'Data error',
                     'errors': serializer.errors,
                 },
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_418_IM_A_TEAPOT
             )
 
     def delete(self, request, shop_pk, machine_pk):
@@ -324,14 +332,23 @@ class MaintenanceScheduleApi(ShopUserBaseApi):
                         'item': serializer.data,
                     },
                 )
+            else:
+                return Response(
+                    {
+                        'status': 'error',
+                        'message': 'Data error',
+                        'errors': serializer.errors,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         except:  # noqa TO DO
             return Response(
                 {
                     'status': 'error',
                     'message': 'Data error',
-                    'errors': serializer.errors,
+                    'errors': 'Unkown Error',
                 },
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_418_IM_A_TEAPOT
             )
 
     def patch(self, request, shop_pk, task_pk):
@@ -358,22 +375,23 @@ class MaintenanceScheduleApi(ShopUserBaseApi):
                     },
                 )
 
-            return Response(
-                {
-                    'status': 'error',
-                    'message': 'Data error',
-                    'errors': serializer.errors,
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            else:
+                return Response(
+                    {
+                        'status': 'error',
+                        'message': 'Data error',
+                        'errors': serializer.errors,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         except:  # noqa TO DO
             return Response(
                 {
                     'status': 'error',
                     'message': 'Data error',
-                    'errors': serializer.errors,
+                    'errors': 'Unkown Error',
                 },
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_418_IM_A_TEAPOT
             )
 
     def delete(self, request, shop_pk, task_pk):
@@ -431,24 +449,35 @@ class LogEntryApi(ShopUserBaseApi):
             partial=True,
         )
 
-        if serializer.is_valid():
-            serializer.save(**save_kwargs)
+        try:
+            if serializer.is_valid():
+                serializer.save(**save_kwargs)
+                return Response(
+                    {
+                        'status': 'ok',
+                        'message': 'Log item updated',
+                        'log_item': serializer.data,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    {
+                        'status': 'error',
+                        'message': 'serializer errors',
+                        'errors': serializer.errors,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except:  # noqa TO DO
             return Response(
                 {
-                    'status': 'ok',
-                    'message': 'Log item updated',
-                    'log_item': serializer.data,
+                    'status': 'error',
+                    'message': 'Data error',
+                    'errors': 'Unkown Error',
                 },
-                status=status.HTTP_200_OK,
+                status=status.HTTP_418_IM_A_TEAPOT
             )
-        return Response(
-            {
-                'status': 'error',
-                'message': 'serializer errors',
-                'errors': serializer.errors,
-            },
-            status=status.HTTP_400_BAD_REQUEST
-        )
 
     def delete(self, request, shop_pk, task_pk, log_entry_pk):
         return Response(

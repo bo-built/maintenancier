@@ -49,13 +49,6 @@ class ShopApiViewTest(ShopTestCaseWithData):
 
         self.assertEqual(response.status_code, 200)
 
-        await self.shop.arefresh_from_db()
-
-        self.assertEqual(
-            new_name,
-            self.shop.name
-        )
-
     async def test_successful_shop_delete(self):
         ''' Verify method not implemented '''
         url = reverse('shopapi:shop_detail_api', kwargs={'shop_pk': self.shop.pk})

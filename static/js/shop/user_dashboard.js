@@ -5,6 +5,7 @@ document.addEventListener('alpine:init', () => {
         user: {},
         createShopModal: null,
         shop_api_url: null,
+        errorMessage: null,
 
         openShopModal() {
             this.createShopModal.show();
@@ -41,6 +42,8 @@ document.addEventListener('alpine:init', () => {
 
                 if (!response.ok) {
                     console.error('Validation errors:', data);
+                    this.errorMessage = Object.values(data.errors).flat().join(' ');
+                    this.closeShopModal();
                     return;
                 }
 

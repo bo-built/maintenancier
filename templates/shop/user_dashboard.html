@@ -9,6 +9,11 @@
 <div x-data="userDashboardApp" x-init="initDashoard(
     '{% url 'shopapi:shop_api' %}',
 )">
+<div x-show="errorMessage" class="row">
+    <div class="col">
+        <div class="alert alert-danger" x-text="errorMessage"></div>
+    </div>
+</div>
 <div class="row">
     <div class="col-md-4">
 
