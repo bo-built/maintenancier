@@ -8,6 +8,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         test_data = TestData(local_test_data)
+        test_data.generate_local_test_data()
         print (
             "Local test data generated. You can login using:\n{}\n{}".format(
                 test_data.test_data['user']['email'],

@@ -87,7 +87,7 @@
             <template x-for="log_item in log_entries.filter(entry => !selectedTask || entry.task.pk == selectedTask.pk)" :key="log_item.pk">
                 <tbody>
                     <tr>
-                        <td x-text="log_item.item_name"></td>
+                        <td x-text="log_item.task_name"></td>
                         <td x-text="log_item.done_by.name"></td>
                         <td x-text="new Date(log_item.done_date).toLocaleDateString()"></td>
                     </tr>

@@ -13,12 +13,25 @@ from shop.models import (
 
 
 class TestData():
+    """ Class for generating test data. This can be used IRL by calling
+        `python manage.py generate_local_test_data`
+
+        It is also used for most test cases, using
+        shop.utils.test_utils.PopulatedTestBase()
+    """
+    BACKFILL_DAYS = 90
+
     def __init__(self, test_data):
         self.test_data = test_data
         self.main_user = None
         self.shops = []
 
     def generate_task_and_log_entries(self, _task, shop, machine, users):
+        """ Creates a task with given data for given shop and machine.
+
+            Goes back BACKFILL_DAYS days and populates completed log entries of
+            the task and assigns it to a random user from users.
+        """
         today = timezone.now()
         start_date = today + timedelta(days=_task['start_date_distance'])
         task = MaintenanceTask.objects.create(
@@ -30,7 +43,7 @@ class TestData():
             start_date=start_date,
         )
         done_date = start_date
-        past_iteration_cap = 90
+        past_iteration_cap = self.BACKFILL_DAYS
         past_iterations = round(past_iteration_cap / _task['interval'])
         for i in range(past_iterations):
             days_ago = (i + 1) * _task['interval']
@@ -54,23 +67,25 @@ class TestData():
 
 
     def generate_main_user(self):
-        main_user = User.objects.create(
+        main_user = User.objects.create_user(
             first_name=self.test_data['user']['first_name'],
             last_name=self.test_data['user']['last_name'],
+            username=self.test_data['user']['email'],
             email=self.test_data['user']['email'],
+            password=self.test_data['user']['password'],
         )
-        main_user.set_password(self.test_data['user']['password'])
-        main_user.save()
         return main_user
 
 
     def generate_shop_user(self, _user, shop):
         user = User.objects.filter(email=_user['email']).first()
         if not user:
-            user = User.objects.create(
+            user = User.objects.create_user(
                 first_name=_user['first_name'],
                 last_name=_user['last_name'],
                 email=_user['email'],
+                username=_user['email'],
+                password='supers@f32',
             )
         shop_user = ShopUser.objects.create(shop=shop, user=user)
         return shop_user
@@ -106,4 +121,4 @@ class TestData():
         self.main_user = self.generate_main_user()
 
         for _shop in self.test_data['shops']:
-            self.shops.append(self.generate_shop_data(_shop, self.main_user))
+            self.shops.append(self.generate_shop_data(_shop,))
