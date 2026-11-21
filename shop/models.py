@@ -330,7 +330,7 @@ class MaintenanceTask(StatusModel):
             'shopapi:maintenance_schedule_detail_api',
             kwargs={
                 'shop_pk': self.shop.pk,
-                'item_pk': self.pk,
+                'task_pk': self.pk,
             }
         )
 
@@ -495,8 +495,8 @@ class LogEntry(models.Model):
             'shopapi:log_item_detail_api',
             kwargs={
                 'shop_pk': self.task.shop.pk,
-                'item_pk': self.task.pk,
-                'log_item_pk': self.pk,
+                'task_pk': self.task.pk,
+                'log_entry_pk': self.pk,
             }
         )
 

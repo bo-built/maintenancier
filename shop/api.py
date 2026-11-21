@@ -334,9 +334,9 @@ class MaintenanceScheduleApi(ShopUserBaseApi):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-    def patch(self, request, shop_pk, item_pk):
+    def patch(self, request, shop_pk, task_pk):
         try:
-            item = MaintenanceTask.objects.get(pk=item_pk)
+            item = MaintenanceTask.objects.get(pk=task_pk)
             serializer = serializers.MaintenanceTaskSerializer(
                 item,
                 data=request.data,
@@ -376,7 +376,7 @@ class MaintenanceScheduleApi(ShopUserBaseApi):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-    def delete(self, request, shop_pk, item_pk):
+    def delete(self, request, shop_pk, task_pk):
         return Response(
             {
                 'status': 'error',
@@ -387,7 +387,7 @@ class MaintenanceScheduleApi(ShopUserBaseApi):
 
 
 class LogEntryApi(ShopUserBaseApi):
-    def get(self, request, shop_pk, item_pk):
+    def get(self, request, shop_pk, task_pk):
         return Response(
             {
                 'status': 'error',
@@ -396,7 +396,7 @@ class LogEntryApi(ShopUserBaseApi):
             status=status.HTTP_501_NOT_IMPLEMENTED
         )
 
-    def post(self, request, shop_pk, item_pk):
+    def post(self, request, shop_pk, task_pk):
         return Response(
             {
                 'status': 'error',
@@ -405,8 +405,8 @@ class LogEntryApi(ShopUserBaseApi):
             status=status.HTTP_501_NOT_IMPLEMENTED
         )
 
-    def patch(self, request, shop_pk, item_pk, log_item_pk):
-        log_item = get_object_or_404(LogEntry, pk=log_item_pk)
+    def patch(self, request, shop_pk, task_pk, log_entry_pk):
+        log_item = get_object_or_404(LogEntry, pk=log_entry_pk)
 
         done_by_data = request.data.get('done_by')
         save_kwargs = {}
@@ -450,7 +450,7 @@ class LogEntryApi(ShopUserBaseApi):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    def delete(self, request, shop_pk, item_pk, log_item_pk):
+    def delete(self, request, shop_pk, task_pk, log_entry_pk):
         return Response(
             {
                 'status': 'error',

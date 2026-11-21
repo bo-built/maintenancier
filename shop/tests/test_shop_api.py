@@ -192,7 +192,7 @@ class MaintenanceScheduleApiTest(ShopTestCaseWithData):
             'shopapi:maintenance_schedule_detail_api',
             kwargs={
                 'shop_pk': self.shop.pk,
-                'item_pk': test_item.pk,
+                'task_pk': test_item.pk,
             }
         )
         change_data = {
@@ -216,7 +216,7 @@ class MaintenanceScheduleApiTest(ShopTestCaseWithData):
             'shopapi:maintenance_schedule_detail_api',
             kwargs={
                 'shop_pk': self.shop.pk,
-                'item_pk': self.maintenance_items[0].pk,
+                'task_pk': self.maintenance_items[0].pk,
             }
         )
         response = await self.async_client.delete(
@@ -239,7 +239,7 @@ class MaintenanceLogApiTest(ShopTestCaseWithData):
             'shopapi:log_item_api',
             kwargs={
                 'shop_pk': self.shop.pk,
-                'item_pk': self.maintenance_items[0].pk,
+                'task_pk': self.maintenance_items[0].pk,
             }
         )
         response = await self.async_client.get(
@@ -259,7 +259,7 @@ class MaintenanceLogApiTest(ShopTestCaseWithData):
             'shopapi:log_item_api',
             kwargs={
                 'shop_pk': self.shop.pk,
-                'item_pk': self.maintenance_items[0].pk,
+                'task_pk': self.maintenance_items[0].pk,
             }
         )
         response = await self.async_client.post(
@@ -280,8 +280,8 @@ class MaintenanceLogApiTest(ShopTestCaseWithData):
             'shopapi:log_item_detail_api',
             kwargs={
                 'shop_pk': self.shop.pk,
-                'item_pk': self.maintenance_items[0].pk,
-                'log_item_pk': log_entry.pk,
+                'task_pk': self.maintenance_items[0].pk,
+                'log_entry_pk': log_entry.pk,
             }
         )
         payload = {'status': 'done'}
@@ -305,8 +305,8 @@ class MaintenanceLogApiTest(ShopTestCaseWithData):
             'shopapi:log_item_detail_api',
             kwargs={
                 'shop_pk': self.shop.pk,
-                'item_pk': self.maintenance_items[0].pk,
-                'log_item_pk': log_entry.pk,
+                'task_pk': self.maintenance_items[0].pk,
+                'log_entry_pk': log_entry.pk,
             }
         )
         response = await self.async_client.delete(

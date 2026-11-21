@@ -46,17 +46,17 @@ urlpatterns = [
         name='maintenance_schedule_by_interval_api',
     ),
     path(
-        'api/shop/<int:shop_pk>/schedule/<int:item_pk>/',
+        'api/shop/<int:shop_pk>/schedule/<int:task_pk>/',
         api_views.MaintenanceScheduleApi.as_view(),
         name='maintenance_schedule_detail_api',
     ),
     path(
-        'api/shop/<int:shop_pk>/schedule/<int:item_pk>/log/',
+        'api/shop/<int:shop_pk>/schedule/<int:task_pk>/log/',
         api_views.LogEntryApi.as_view(),
         name='log_item_api',
     ),
     path(
-        'api/shop/<int:shop_pk>/schedule/<int:item_pk>/log/<int:log_item_pk>/',
+        'api/shop/<int:shop_pk>/schedule/<int:task_pk>/log/<int:log_entry_pk>/',
         api_views.LogEntryApi.as_view(),
         name='log_item_detail_api',
     ),
