@@ -9,11 +9,12 @@ class NameChoiceField(forms.ModelChoiceField):
 
 class NotesForm(forms.Form):
     notes = forms.CharField(
+        required=False,
+        label='Any notes?',
         widget=forms.Textarea(attrs={
             'class': 'form-select',
             'autocomplete': 'off',
             'x-model': 'draft_notes',
-            'label': 'Any notes?',
         })
     )
 
