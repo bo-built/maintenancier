@@ -6,4 +6,10 @@ class Command(BaseCommand):
     help = 'Wipes all local shops and resets them with test data.'
 
     def handle(self, *args, **options):
-        generate_local_test_data()
+        test_user = generate_local_test_data()
+        print (
+            "Local test data generated. You can login using:\n{}\n{}".format(
+                test_user['email'],
+                test_user['password']
+            )
+        )
