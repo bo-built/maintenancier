@@ -1,0 +1,24 @@
+<div class="modal fade" x-ref="archiveTaskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Archive Maintenance Item</h5>
+                <button type="button" class="btn-close" aria-label="Close" @click="closeArchiveTaskModal()">
+                    <span aria-hidden="true"></span>
+                </button>
+            </div>
+            <form>
+                <div class="modal-body">
+                    <p>Are you sure you want to archive "<span x-text="archiveTargetTask.name"></span>"?</p>
+                    <p>Completed instances will remain in the log, but incomplete and future instances will be removed from the schedule.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-warning"
+                    @click="archiveTask()">Continue</button>
+                    <button type="button" class="btn btn-primary"
+                        @click="closeArchiveTaskModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

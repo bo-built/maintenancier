@@ -41,62 +41,6 @@ class MachineForm(forms.ModelForm):
         }
 
 
-class MaintenanceScheduleItemForm(forms.ModelForm):
-    machine = NameChoiceField(
-        queryset=Machine.objects.none(),
-        widget=forms.Select(attrs={
-            'class': 'form-select',
-            'autofocus': True,
-        }),
-        required=True,
-    )
-
-    def __init__(self, *args, **kwargs):
-        shop = kwargs.pop('shop', None)
-        super().__init__(*args, **kwargs)
-
-        self.fields['name'].required = True
-        self.fields['start_date'].required = True
-        self.fields['interval'].required = True
-        self.fields['machine'].required = True
-        self.fields['description'].required = False
-
-        if shop is not None:
-            self.fields['machine'].queryset = Machine.objects.filter(
-                shop=shop)
-
-    class Meta:
-        model = MaintenanceScheduleItem
-        fields = [
-            'machine',
-            'name',
-            'interval',
-            'description',
-            'start_date',
-        ]
-        widgets = {
-            'machine': forms.Select(attrs={
-                'class': 'form-select',
-            }),
-            'name': forms.TextInput(attrs={
-                'class': 'form-select',
-                'autocomplete': 'off',
-                'placeholder': 'The name of this task ...'
-            }),
-            'interval': forms.Select(attrs={
-                'class': 'form-select',
-            }),
-            'description': forms.Textarea(attrs={
-                'class': 'form-select',
-                'autocomplete': 'off',
-            }),
-            'start_date': forms.DateInput(attrs={
-                'class': 'form-control',
-                'type': 'date',  # Renders native browser date picker
-            }),
-        }
-
-
 class MachineMaintenanceScheduleItemForm(forms.ModelForm):
     def __init__(self, *args, machine=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -132,3 +76,38 @@ class MachineMaintenanceScheduleItemForm(forms.ModelForm):
                 'type': 'date',  # Renders native browser date picker
             }),
         }
+
+
+class MachineMaintenanceScheduleItemEditForm(forms.Form):
+    name = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'autocomplete': 'off',
+            'x-model': 'draft.name',
+        })
+    )
+
+    interval = forms.ChoiceField(
+        choices=MaintenanceScheduleItem.INTERVAL_CHOICES,
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+            'autocomplete': 'off',
+            'x-model': 'draft.interval',
+        })
+    )
+
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'form-select',
+            'autocomplete': 'off',
+            'x-model': 'draft.description',
+        })
+    )
+
+    next_due_date = forms.DateField(
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date',  # Renders native browser date picker
+            'x-model': 'draft.next_scheduled.due_date',
+        })
+    )

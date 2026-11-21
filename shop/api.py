@@ -1,3 +1,4 @@
+from datetime import date
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
@@ -219,7 +220,7 @@ class MachineApi(ShopUserBaseApi):
                     {
                         'status': 'ok',
                         'message': 'Machine updated',
-                        'data': serializer.data,
+                        'machine': serializer.data,
                     },
                 )
 
@@ -334,13 +335,46 @@ class MaintenanceScheduleApi(ShopUserBaseApi):
             )
 
     def patch(self, request, shop_pk, item_pk):
-        return Response(
-            {
-                'status': 'error',
-                'message': 'This method is not implemented yet',
-            },
-            status=status.HTTP_501_NOT_IMPLEMENTED
-        )
+        try:
+            item = MaintenanceScheduleItem.objects.get(pk=item_pk)
+            serializer = serializers.maintenanceScheduleItemSerializer(
+                item,
+                data=request.data,
+                partial=True
+            )
+            if serializer.is_valid():
+                serializer.save()
+                if request.data.get('next_due_date'):
+                    next_due_date = date.fromisoformat(request.data['next_due_date'])
+                    entry = item.next_scheduled
+                    if entry is not None and entry.due_date != next_due_date:
+                        entry.due_date = next_due_date
+                        entry.save(update_fields=['due_date'])
+                return Response(
+                    {
+                        'status': 'ok',
+                        'message': 'Maintenance task updated',
+                        'task': serializer.data,
+                    },
+                )
+
+            return Response(
+                {
+                    'status': 'error',
+                    'message': 'Data error',
+                    'errors': serializer.errors,
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except:  # noqa TO DO
+            return Response(
+                {
+                    'status': 'error',
+                    'message': 'Data error',
+                    'errors': serializer.errors,
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     def delete(self, request, shop_pk, item_pk):
         return Response(

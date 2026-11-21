@@ -198,6 +198,27 @@ class Machine(StatusModel):
     class meta:
         unique_together = ['shop', 'name', ]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Track the initial status loaded from the DB (None for unsaved new objects)
+        self._original_status = self.status if self.pk else None
+
+    def save(self, *args, **kwargs):
+        ''' If an item is archived, delete incomplete future iterations
+        '''
+        just_archived = (
+            self._original_status != self.Status.ARCHIVED
+            and self.status == self.Status.ARCHIVED
+        )
+
+        super().save(*args, **kwargs)
+        self._original_status = self.status
+
+        if just_archived:
+            for maintenance_task in self.maintenance_items.all():
+                maintenance_task.status = 'archived'
+                maintenance_task.save()
+
     @property
     def api_url(self):
         return reverse(
@@ -316,8 +337,14 @@ class MaintenanceScheduleItem(StatusModel):
             return self.machine.name
         return 'Shop'
 
+    @property
+    def next_scheduled(self):
+        return self.log_entries.filter(
+            status='pending',
+        ).order_by('due_date').first()
+
     def delete_incomplete_log_items(self):
-        self.maintenancelogentry_set.exclude(status='done').delete()
+        self.log_entries.exclude(status='done').delete()
 
 
 class MaintenanceLogEntry(models.Model):
@@ -352,6 +379,7 @@ class MaintenanceLogEntry(models.Model):
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
+        related_name='log_entries',
     )
     due_date = models.DateField(default=timezone.localdate, db_index=True)
     status = models.CharField(
@@ -392,7 +420,6 @@ class MaintenanceLogEntry(models.Model):
 
         generate_child = just_completed or just_dismissed
 
-        # Optional: update fields on this model before saving
         if generate_child:
             today = timezone.now()
             if not force_done_date:

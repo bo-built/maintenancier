@@ -15,7 +15,7 @@ class ShopApiViewTest(ShopTestCaseWithData):
     async def test_successful_shop_post(self):
         ''' Verify new shop instance is created from successful post call
         '''
-        url = reverse('shop:shop_api')
+        url = reverse('shopapi:shop_api')
 
         payload = {
             'name': 'Sturgis & Sons',
@@ -31,7 +31,7 @@ class ShopApiViewTest(ShopTestCaseWithData):
         self.assertEqual(response.json()['message'], 'Shop created')
 
     async def test_successful_shop_get(self):
-        url = reverse('shop:shop_api')
+        url = reverse('shopapi:shop_api')
         response = await self.async_client.get(
             url,
             content_type='application/json',
@@ -39,7 +39,7 @@ class ShopApiViewTest(ShopTestCaseWithData):
         self.assertEqual(response.status_code, 200)
 
     async def test_successful_shop_patch(self):
-        url = reverse('shop:shop_detail_api', kwargs={'shop_pk': self.shop.pk})
+        url = reverse('shopapi:shop_detail_api', kwargs={'shop_pk': self.shop.pk})
         new_name = 'Cloud 9 Ozark Highlands Distribution Center'
         response = await self.async_client.patch(
             url,
@@ -58,7 +58,7 @@ class ShopApiViewTest(ShopTestCaseWithData):
 
     async def test_successful_shop_delete(self):
         ''' Verify method not implemented '''
-        url = reverse('shop:shop_detail_api', kwargs={'shop_pk': self.shop.pk})
+        url = reverse('shopapi:shop_detail_api', kwargs={'shop_pk': self.shop.pk})
         response = await self.async_client.delete(
             url,
             data={},
@@ -75,7 +75,7 @@ class MachineApiTest(ShopTestCaseWithData):
 
     async def test_successful_machine_fetch(self):
         machine_names = [m.name for m in self.machines]
-        url = reverse('shop:machine_api', kwargs={'shop_pk': self.shop.pk})
+        url = reverse('shopapi:machine_api', kwargs={'shop_pk': self.shop.pk})
         response = await self.async_client.get(
             url,
             content_type='application/json',
@@ -95,7 +95,7 @@ class MachineApiTest(ShopTestCaseWithData):
         new_name = 'Shop Bot 2.0'
 
         url = reverse(
-            'shop:machine_detail_api',
+            'shopapi:machine_detail_api',
             kwargs={
                     'shop_pk': self.shop.pk,
                     'machine_pk': update_machine.pk
@@ -118,7 +118,7 @@ class MachineApiTest(ShopTestCaseWithData):
     async def test_successful_machine_post(self):
         new_name = 'Shop Bot 2.0'
         url = reverse(
-            'shop:machine_api',
+            'shopapi:machine_api',
             kwargs={'shop_pk': self.shop.pk, }
             )
 
@@ -138,7 +138,7 @@ class MachineApiTest(ShopTestCaseWithData):
     async def test_successful_machine_delete(self):
         ''' Verify method not implemented '''
         url = reverse(
-            'shop:machine_detail_api',
+            'shopapi:machine_detail_api',
             kwargs={
                 'shop_pk': self.shop.pk,
                 'machine_pk': self.machines[0].pk
@@ -173,7 +173,7 @@ class MaintenanceScheduleApiTest(ShopTestCaseWithData):
         }
 
         url = reverse(
-            'shop:maintenance_schedule_api',
+            'shopapi:maintenance_schedule_api',
             kwargs={
                 'shop_pk': self.shop.pk,
             }
@@ -187,28 +187,33 @@ class MaintenanceScheduleApiTest(ShopTestCaseWithData):
 
     async def test_successful_maintenance_schedule_patch(self):
         ''' Verify method not implemented '''
+        test_item = self.maintenance_items[0]
         url = reverse(
-            'shop:maintenance_schedule_detail_api',
+            'shopapi:maintenance_schedule_detail_api',
             kwargs={
                 'shop_pk': self.shop.pk,
-                'item_pk': self.maintenance_items[0].pk,
+                'item_pk': test_item.pk,
             }
         )
+        change_data = {
+            'name': 'new name',
+            'interval': 7
+        }
         response = await self.async_client.patch(
             url,
-            data={},
+            data=change_data,
             content_type='application/json',
         )
-        self.assertEqual(response.status_code, 501)
-        self.assertEqual(
-            response.data['message'],
-            'This method is not implemented yet'
-        )
+        self.assertEqual(response.status_code, 200)
+
+        await test_item.arefresh_from_db()
+        self.assertEqual(test_item.name, change_data['name'])
+        self.assertEqual(test_item.interval, change_data['interval'])
 
     async def test_successful_maintenance_schedule_delete(self):
         ''' Verify method not implemented '''
         url = reverse(
-            'shop:maintenance_schedule_detail_api',
+            'shopapi:maintenance_schedule_detail_api',
             kwargs={
                 'shop_pk': self.shop.pk,
                 'item_pk': self.maintenance_items[0].pk,
@@ -231,7 +236,7 @@ class MaintenanceLogApiTest(ShopTestCaseWithData):
     async def test_successful_maintenance_log_fetch(self):
         ''' Verify method not implemented '''
         url = reverse(
-            'shop:log_item_api',
+            'shopapi:log_item_api',
             kwargs={
                 'shop_pk': self.shop.pk,
                 'item_pk': self.maintenance_items[0].pk,
@@ -251,7 +256,7 @@ class MaintenanceLogApiTest(ShopTestCaseWithData):
     async def test_successful_maintenance_log_post(self):
         ''' Verify method not implemented '''
         url = reverse(
-            'shop:log_item_api',
+            'shopapi:log_item_api',
             kwargs={
                 'shop_pk': self.shop.pk,
                 'item_pk': self.maintenance_items[0].pk,
@@ -270,9 +275,9 @@ class MaintenanceLogApiTest(ShopTestCaseWithData):
 
     async def test_successful_maintenance_log_patch(self):
         ''' Verify method not implemented '''
-        log_entry = await self.maintenance_items[0].maintenancelogentry_set.afirst()
+        log_entry = await self.maintenance_items[0].log_entries.afirst()
         url = reverse(
-            'shop:log_item_detail_api',
+            'shopapi:log_item_detail_api',
             kwargs={
                 'shop_pk': self.shop.pk,
                 'item_pk': self.maintenance_items[0].pk,
@@ -295,9 +300,9 @@ class MaintenanceLogApiTest(ShopTestCaseWithData):
 
     async def test_successful_maintenance_log_delete(self):
         ''' Verify method not implemented '''
-        log_entry = await self.maintenance_items[0].maintenancelogentry_set.afirst()
+        log_entry = await self.maintenance_items[0].log_entries.afirst()
         url = reverse(
-            'shop:log_item_detail_api',
+            'shopapi:log_item_detail_api',
             kwargs={
                 'shop_pk': self.shop.pk,
                 'item_pk': self.maintenance_items[0].pk,
@@ -324,7 +329,7 @@ class ShopUserApiTest(ShopTestCaseWithData):
             'name': self.shop_user.name
         }
         url = reverse(
-            'shop:shop_user_api',
+            'shopapi:shop_user_api',
             kwargs={
                 'shop_pk': self.shop.pk,
             }
@@ -340,7 +345,7 @@ class ShopUserApiTest(ShopTestCaseWithData):
 
     async def test_successful_all_shop_user_fetch(self):
         url = reverse(
-            'shop:shop_user_list_api',
+            'shopapi:shop_user_list_api',
             kwargs={
                 'shop_pk': self.shop.pk,
             }
@@ -356,7 +361,7 @@ class ShopUserApiTest(ShopTestCaseWithData):
     async def test_successful_shop_user_post(self):
         ''' Verify method not implemented '''
         url = reverse(
-            'shop:shop_user_api',
+            'shopapi:shop_user_api',
             kwargs={
                 'shop_pk': self.shop.pk,
             }
@@ -375,7 +380,7 @@ class ShopUserApiTest(ShopTestCaseWithData):
     async def test_successful_shop_user_patch(self):
         ''' Verify method not implemented '''
         url = reverse(
-            'shop:shop_user_detail_api',
+            'shopapi:shop_user_detail_api',
             kwargs={
                 'shop_pk': self.shop.pk,
                 'shop_user_pk': self.addtl_shop_users[0].pk,
@@ -395,7 +400,7 @@ class ShopUserApiTest(ShopTestCaseWithData):
     async def test_successful_shop_user_delete(self):
         ''' Verify method not implemented '''
         url = reverse(
-            'shop:shop_user_detail_api',
+            'shopapi:shop_user_detail_api',
             kwargs={
                 'shop_pk': self.shop.pk,
                 'shop_user_pk': self.addtl_shop_users[0].pk,

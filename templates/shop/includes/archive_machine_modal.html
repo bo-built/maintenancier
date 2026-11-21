@@ -1,0 +1,32 @@
+<div class="modal fade" x-ref="archiveMachineModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div x-show="machine.status=='active'" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Archive Machine</h5>
+                <button type="button" class="btn-close" aria-label="Close" @click="closeArchiveMachineModal()">
+                    <span aria-hidden="true"></span>
+                </button>
+            </div>
+            <form>
+                <div class="modal-body">
+                    <p>Are you sure you want to archive "<span x-text="machine.name"></span>"?</p>
+                    <p>All associated tasks will be archived and it will no longer appear on your dashboard.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-warning"
+                    @click="archiveMachine()">Continue</button>
+                    <button type="button" class="btn btn-primary"
+                        @click="closeArchiveMachineModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+        <div x-show="machine.status=='archived'" class="modal-content">
+            <div class="modal-body">
+                <div class="alert alert-success">
+                    Machine archived.
+                    <a href="{% url 'shop:shop_dashboard' shop_pk=shop.pk %}" class="btn btn-info">Return to shop</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

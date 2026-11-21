@@ -5,7 +5,6 @@ document.addEventListener('alpine:init', () => {
         schedule: {},
         shop: {},
         user: {},
-        createTaskModal: null,
         dismissTaskModal: null,
         dismissTargetGroup: [],
         dismissTargetTask: {'name': 'tmp'},
@@ -55,53 +54,6 @@ document.addEventListener('alpine:init', () => {
                 select.add(option);
                 this.machines.push(data.machine);
                 this.closeMachineModal();
-
-            } catch (error) {
-                console.error('Failed to create maintenance item:', error);
-            }
-        },
-
-        openTaskModal() {
-            this.createTaskModal.show();
-        },
-
-        closeTaskModal() {
-            this.createTaskModal.hide();
-        },
-
-        async submitNewTask(formEl) {
-            const formData = new FormData(formEl);
-            const payload = Object.fromEntries(formData.entries());
-
-            Object.keys(payload).forEach((key) => {
-                if (payload[key] === '') {
-                    payload[key] = null;
-                }
-            });
-
-            formEl.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
-                payload[cb.name] = cb.checked;
-            });
-            try {
-                const response = await fetch(this.shop.schedule_api_url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken'),
-                    },
-                    body: JSON.stringify(payload),
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    console.error('Validation errors:', data);
-                    return;
-                }
-
-                formEl.reset();
-                this.fetchToDoSchedule();
-                this.closeTaskModal();
 
             } catch (error) {
                 console.error('Failed to create maintenance item:', error);
@@ -227,13 +179,6 @@ document.addEventListener('alpine:init', () => {
         },
 
         async initDashoard(shop_api_url) {
-            this.createTaskModal = new bootstrap.Modal(this.$refs.createTaskModal);
-            this.$refs.createTaskModal.addEventListener('hide.bs.modal', () => {
-                if (document.activeElement instanceof HTMLElement) {
-                    document.activeElement.blur();
-                }
-            });
-
 
             this.dismissTaskModal = new bootstrap.Modal(this.$refs.dismissTaskModal);
             this.$refs.dismissTaskModal.addEventListener('hide.bs.modal', () => {

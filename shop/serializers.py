@@ -18,17 +18,35 @@ class shopUserSerializer(serializers.HyperlinkedModelSerializer):
         ]
 
 
+class maintenanceLogEntryMicroSerializer(serializers.HyperlinkedModelSerializer):
+
+    done_by = shopUserSerializer()
+
+    class Meta:
+        model = MaintenanceLogEntry
+        fields = [
+            'pk',
+            'due_date',
+            'done_by',
+            'done_date',
+            'status',
+            'api_url',
+        ]
+
+
 class maintenanceScheduleItemSerializer(serializers.HyperlinkedModelSerializer):
     machine = serializers.PrimaryKeyRelatedField(
         queryset=Machine.objects.all(),
         required=False,
         allow_null=True,
     )
+    next_scheduled = maintenanceLogEntryMicroSerializer()
 
     class Meta:
         model = MaintenanceScheduleItem
         fields = [
             'pk',
+            'status',
             'name',
             'description',
             'source',
@@ -36,6 +54,8 @@ class maintenanceScheduleItemSerializer(serializers.HyperlinkedModelSerializer):
             'display_interval',
             'start_date',
             'machine',
+            'api_url',
+            'next_scheduled',
         ]
 
 
@@ -80,6 +100,8 @@ class machineSerializer(serializers.HyperlinkedModelSerializer):
         fields = [
             'pk',
             'name',
+            'is_shop',
+            'status',
             'api_url',
             'dashboard_url',
             'maintenance_history_api',

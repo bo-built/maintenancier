@@ -5,6 +5,10 @@ document.addEventListener('alpine:init', () => {
         machine: {},
         selectedTask: null,
         createTaskModal: null,
+        editingTask: null,
+        draft: {},
+        archiveTargetTask: null,
+        archiveMachineModal: null,
 
         openTaskModal() {
             this.createTaskModal.show();
@@ -53,11 +57,137 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        setEditingTask(task) {
+            this.editingTask = task;
+            this.draft = { ...task };
+        },
+
+        unSetEditingTask(task) {
+            this.editingTask = null;
+            this.draft = null;
+        },
+
+        async editTask(formEl, task) {
+
+            const formData = new FormData(formEl);
+            const payload = Object.fromEntries(formData.entries());
+
+            Object.keys(payload).forEach((key) => {
+                if (payload[key] === '') {
+                    payload[key] = null;
+                }
+            });
+
+            formEl.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+                payload[cb.name] = cb.checked;
+            });
+            try {
+                const response = await fetch(task.api_url, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    console.error('Validation errors:', data);
+                    return;
+                }
+
+                Object.assign(task, data.task);
+                this.editingTask = null;
+
+            } catch (error) {
+                console.error('Failed to create maintenance item:', error);
+            }
+        },
+
         setSelectedTask(target) {
             if (this.selectedTask == target) {
                 this.selectedTask = false;
             } else {
                 this.selectedTask = target;
+            }
+        },
+
+        confirmArchiveTask(target) {
+            this.archiveTargetTask = target;
+            this.archiveTaskModal.show();
+        },
+
+        closeArchiveTaskModal() {
+            this.archiveTargetTask = null;
+            this.archiveTaskModal.hide();
+        },
+
+        async archiveTask() {
+            try {
+                payload = {
+                    pk: this.archiveTargetTask.pk,
+                    status: 'archived',
+                }
+                const response = await fetch(this.archiveTargetTask.api_url, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    console.error('Validation errors:', data);
+                    return;
+                }
+
+                this.editingTask = null;
+                Object.assign(this.archiveTargetTask, data.task);
+                this.closeArchiveTaskModal();
+
+            } catch (error) {
+                console.error('Failed to archive maintenance item:', error);
+            }
+        },
+
+        confirmArchiveMachine(target) {
+            this.archiveMachineModal.show();
+        },
+
+        closeArchiveMachineModal() {
+            this.archiveMachineModal.hide();
+        },
+
+        async archiveMachine() {
+            try {
+                payload = {
+                    pk: this.machine.pk,
+                    status: 'archived',
+                }
+                const response = await fetch(this.machine.api_url, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    console.error('Validation errors:', data);
+                    return;
+                }
+
+                Object.assign(this.machine, data.machine);
+            } catch (error) {
+                console.error('Failed to archive maintenance item:', error);
             }
         },
 
@@ -77,6 +207,20 @@ document.addEventListener('alpine:init', () => {
 
             this.createTaskModal = new bootstrap.Modal(this.$refs.createTaskModal);
             this.$refs.createTaskModal.addEventListener('hide.bs.modal', () => {
+                if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                }
+            });
+
+            this.archiveTaskModal = new bootstrap.Modal(this.$refs.archiveTaskModal);
+            this.$refs.archiveTaskModal.addEventListener('hide.bs.modal', () => {
+                if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                }
+            });
+
+            this.archiveMachineModal = new bootstrap.Modal(this.$refs.archiveMachineModal);
+            this.$refs.archiveMachineModal.addEventListener('hide.bs.modal', () => {
                 if (document.activeElement instanceof HTMLElement) {
                     document.activeElement.blur();
                 }

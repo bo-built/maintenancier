@@ -1,3 +1,4 @@
+import random
 from datetime import timedelta
 from django.utils import timezone
 from django.contrib.auth.models import User
@@ -10,8 +11,24 @@ from shop.models import (
     MaintenanceLogEntry,
 )
 
-
 local_test_data = {
+    'other_users': [
+        {
+            'first_name': 'Dina',
+            'last_name': 'Fox',
+            'email': 'dfox@test.com'
+        },
+        {
+            'first_name': 'Sandra',
+            'last_name': 'Kaluiokalani',
+            'email': 'sandra@mailg.com'
+        },
+        {
+            'first_name': 'Glenn',
+            'last_name': 'Sturgis',
+            'email': 'glenn@sturgisandsons.com'
+        },
+    ],
     'shops': [
         {
             'name': 'Five x Five Studio',
@@ -258,7 +275,7 @@ local_test_data = {
 }
 
 
-def generate_task(_task, shop, shopuser, machine):
+def generate_task(_task, shop, shopuser, machine, users):
     today = timezone.now()
     start_date = today + timedelta(days=_task['start_date_distance'])
     task = MaintenanceScheduleItem.objects.create(
@@ -284,12 +301,24 @@ def generate_task(_task, shop, shopuser, machine):
         )
         log_item = MaintenanceLogEntry(
             item=task,
-            done_by=shopuser,
+            done_by=random.choice(users),
             done_date=done_date,
             due_date=done_date,
             status=MaintenanceLogEntry.Status.DONE,
         )
         log_item.save(bypass_child=True, force_done_date=True)
+
+
+def generate_shop_user(_user, shop):
+    user = User.objects.filter(email=_user['email']).first()
+    if not user:
+        user = User.objects.create(
+            first_name=_user['first_name'],
+            last_name=_user['last_name'],
+            email=_user['email'],
+        )
+    shop_user = ShopUser.objects.create(shop=shop, user=user)
+    return shop_user
 
 
 def generate_local_test_data():
@@ -303,14 +332,17 @@ def generate_local_test_data():
     for _shop in local_test_data['shops']:
         shop = Shop.objects.create(name=_shop['name'])
         shopuser = ShopUser.objects.create(shop=shop, user=user)
+        users = [shopuser, ]
+        for other_user in local_test_data['other_users']:
+            users.append(generate_shop_user(other_user, shop))
 
         shop_standin = shop.machine_set.get(is_shop=True)
 
         for shop_maintenance in _shop['general_maintenance']:
-            generate_task(shop_maintenance, shop, shopuser, shop_standin)
+            generate_task(shop_maintenance, shop, shopuser, shop_standin, users)
 
         for _machine in _shop['machines']:
             machine = Machine.objects.create(shop=shop, name=_machine['name'])
 
             for _task in _machine['maintenance_tasks']:
-                generate_task(_task, shop, shopuser, machine)
+                generate_task(_task, shop, shopuser, machine, users)

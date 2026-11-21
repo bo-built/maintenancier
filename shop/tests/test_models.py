@@ -42,3 +42,18 @@ class TestMaintenanceItems(PopulatedTestBase):
         self.assertEqual(log_item._description, log_item.item.description)
         self.assertEqual(log_item._item_name, log_item.item.name)
         self.assertEqual(log_item._machine_name, log_item.item.machine.name)
+
+    def test_archive_task(self):
+        test_item = self.maintenance_items[2]
+        test_item.status = 'archived'
+        test_item.save()
+
+        self.assertEqual(0, test_item.log_entries.filter(status='pending').count())
+
+    def test_archive_machine(self):
+        machine = self.machines[1]
+        machine.status = 'archived'
+        machine.save()
+
+        for maintenance_task in machine.maintenance_items.all():
+            self.assertEqual(maintenance_task.status, 'archived')
