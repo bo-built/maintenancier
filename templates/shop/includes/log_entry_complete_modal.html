@@ -1,0 +1,21 @@
+<div class="modal fade" x-ref="completeLogEntryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Complete Task</h5>
+                <button type="button" class="btn-close" aria-label="Close" @click="closeLogEntryModal()">
+                    <span aria-hidden="true"></span>
+                </button>
+            </div>
+            <form method="POST" @submit.prevent="updateTaskStatus()">
+                <div class="modal-body">
+                {% csrf_token %}
+                    {{notes_form.as_p}}
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

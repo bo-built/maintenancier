@@ -8,6 +8,7 @@ from shop.forms import (
     MaintenanceTaskEditForm,
     ShopForm,
     MachineForm,
+    NotesForm,
 )
 
 
@@ -28,6 +29,7 @@ class ShopDashboard(ProtectedView):
             'appuser': request.user.appuser,
             'shop': shop,
             'machine_form': MachineForm(),
+            'notes_form': NotesForm(),
         }
         return HttpResponse(template.render(context, request))
 

@@ -2,7 +2,7 @@ nav div.container-fluid {
     width: 90%;
 }
 .container {
-    padding-top: 50px;
+    padding-top: 25px;
 }
 
 .field {
@@ -18,6 +18,9 @@ nav div.container-fluid {
 .btn {
     &-full {
         width: 100%;
+    }
+    &-sm {
+        padding-inline: 8px;
     }
 }
 

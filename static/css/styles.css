@@ -3,7 +3,7 @@ nav div.container-fluid {
 }
 
 .container {
-  padding-top: 50px;
+  padding-top: 25px;
 }
 
 .field-error {
@@ -16,6 +16,9 @@ nav div.container-fluid {
 
 .btn-full {
   width: 100%;
+}
+.btn-sm {
+  padding-inline: 8px;
 }
 
 nav li.active {

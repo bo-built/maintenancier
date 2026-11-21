@@ -8,11 +8,19 @@
 
 <div class="row">
     <div class="col-12">
-        <a href="{% url 'shop:shop_dashboard' shop_pk=shop.pk %}" class="btn btn-primary">
-        Return to Shop
+        <a href="{% url 'shop:shop_dashboard' shop_pk=shop.pk %}" class="btn btn-primary pad-bottom">
+        &mapstoleft; Return to Shop
         </a>
     </div>
     <div class="col-12"><h2>{{machine.name}}</h2></div>
+</div>
+
+<div class="row d-block d-md-none">
+    <div class="col">
+        <div class="pad-bottom">
+            <a href="#tasks" class="btn btn-full btn-light">&#9660; Jump to Tasks</a>
+        </div>
+    </div>
 </div>
 
 <div x-data="machineApp" x-init="initDashoard(
@@ -25,9 +33,18 @@
         </div>
     </div>
 </div>
+
+
 <div class="row hidden" id="log_loaded">
-    <div class="col-md-4 order-2 order-md-1">
-        <h3>Scheduled Maintenance Items</h3>
+    <div class="col-md-4 order-2 order-md-1" id="tasks">
+        <h3 class="pad-bottom">Scheduled Maintenance Items</h3>
+        <div class="row d-block d-md-none">
+            <div class="col">
+                <div class="pad-bottom">
+                    <a href="#log" class="btn btn-full btn-light">&#9650; Jump to Log</a>
+                </div>
+            </div>
+        </div>
         <div class="pad-bottom">
             <button type="button" class="btn btn-primary btn-full" @click="openTaskModal()">
                 + New Maintenance Task
@@ -45,7 +62,7 @@
                 @click="confirmArchiveMachine()">Archive Machine</button>
         </div>
     </div>
-    <div class="col-md-8 order-1 order-md-2">
+    <div class="col-md-8 order-1 order-md-2" id="log">
         <h3>Maintenance Log</h3>
         {% include 'shop/includes/log_table.html' %}
     </div>

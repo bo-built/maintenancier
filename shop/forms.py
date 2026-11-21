@@ -7,6 +7,17 @@ class NameChoiceField(forms.ModelChoiceField):
         return obj.name
 
 
+class NotesForm(forms.Form):
+    notes = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'form-select',
+            'autocomplete': 'off',
+            'x-model': 'draft_notes',
+            'label': 'Any notes?',
+        })
+    )
+
+
 class ShopForm(forms.ModelForm):
     class Meta:
         model = Shop

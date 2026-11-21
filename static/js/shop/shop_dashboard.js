@@ -6,9 +6,12 @@ document.addEventListener('alpine:init', () => {
         shop: {},
         user: {},
         dismissTaskModal: null,
+        completeLogEntryModal: null,
         dismissTargetGroup: [],
         dismissTargetTask: {'name': 'tmp'},
         createMachineModal: null,
+        draft_notes: '',
+        selectedTask: null,
 
         openMachineModal() {
             this.createMachineModal.show();
@@ -136,14 +139,36 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        async updateTaskStatus(task, isChecked) {
+        confirmCompleteLogEntry(task) {
+            this.selectedTask = task;
+            this.draft_notes = task.notes || '';
+            this.completeLogEntryModal.show();
+        },
+
+        closeLogEntryModal() {
+            this.selectedTask = null;
+            this.draft_notes = '';
+            this.completeLogEntryModal.hide();
+        },
+
+        async updateTaskStatus(task=this.selectedTask) {
             /*
                 When a task status toggle switch is clicked, send a patch to the
                 API that changes the tasks status. The front end should then know
                 that the specific task object status has changed
             */
+            if (!task) return;
             const previousStatus = task.status;
-            const newStatus = isChecked ? 'done' : 'pending';
+
+            var newStatus = '';
+            if (previousStatus == 'pending') {
+                newStatus = 'done';
+                if (this.draft_notes != task.notes) {
+                    task.notes = this.draft_notes;
+                }
+            } else {
+                newStatus = 'pending';
+            }
 
             // 1. Optimistically update the UI immediately
             task.status = newStatus;
@@ -151,6 +176,7 @@ document.addEventListener('alpine:init', () => {
                 var payload = {
                     status: newStatus,
                     done_by: this.user,
+                    notes: task.notes,
                 }
                 const response = await fetch(task.api_url, {
                     method: 'PATCH',
@@ -168,6 +194,7 @@ document.addEventListener('alpine:init', () => {
                 // 2. Sync with the exact data returned by Django
                 const updatedTask = await response.json();
                 Object.assign(task, updatedTask.log_item);
+                this.closeLogEntryModal();
             } catch (error) {
                 // 3. Roll back the UI if the server request fails
                 task.status = previousStatus;
@@ -187,6 +214,14 @@ document.addEventListener('alpine:init', () => {
 
             this.createMachineModal = new bootstrap.Modal(this.$refs.createMachineModal);
             this.$refs.createMachineModal.addEventListener('hide.bs.modal', () => {
+                if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                }
+            });
+
+
+            this.completeLogEntryModal = new bootstrap.Modal(this.$refs.completeLogEntryModal);
+            this.$refs.completeLogEntryModal.addEventListener('hide.bs.modal', () => {
                 if (document.activeElement instanceof HTMLElement) {
                     document.activeElement.blur();
                 }

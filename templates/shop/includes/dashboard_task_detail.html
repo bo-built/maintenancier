@@ -2,36 +2,59 @@
         'alert-info': task.status === 'pending',
         'alert-success': task.status === 'done',
         'alert-danger': task.status === 'overdue'
-    }">
+    }"
+    :id="'task_wrapper_' + task.id"
+    x-data="{showDetails : false}">
 
-    <div class="row">
-        <div class="col-3" x-text="task.machine_name || 'General Shop'"></div>
-        <div class="col-3" x-text="task.task_name"></div>
-        <div class="col-2" x-text="task.interval"></div>
-        <div class="col-2" x-text="task.due_date"></div>
-        <div class="col-2">
-            <div class="form-check form-switch">
-                <input
-                    class="form-check-input"
-                    type="checkbox"
-                    :id="'task-switch-' + task.pk"
-                    :checked="task.status === 'done'"
-                    @change="updateTaskStatus(task, $event.target.checked)"
-                >
-                <label class="form-check-label" :for="'task-switch-' + task.pk"></label>
+    <div :id="'task_details_' + task.id">
+        <div class="row">
+            <div class="col-2">
+                <button x-show="!showDetails"  class="btn btn-light btn-sm" @click="showDetails = !showDetails">
+                    {% include 'global_includes/expand.html' %}
+                </button>
+                <buttonm x-show="showDetails" class="btn btn-light btn-sm" @click="showDetails = !showDetails">
+                    {% include 'global_includes/collapse.html' %}
+                </button>
             </div>
+            <div class="col-4" x-text="task.machine_name"></div>
+            <div class="col-4" x-text="task.interval"></div>
+            <div class="col-2">
+            <button type="button"
+                class="btn btn-success btn-sm"
+                x-show="task.status=='pending'"
+                @click="confirmCompleteLogEntry(task)">&checkmark;</button>
+            <button type="button"
+                class="btn btn-light btn-sm"
+                x-show="task.status=='done'"
+                @click="updateTaskStatus(task)">&#10006;</button></div>
+        </div>
+        <div class="row">
+            <div class="col-2"></div>
+            <div class="col-4" x-text="task.task_name"></div>
+            <div class="col-4" x-text="task.due_date"></div>
+            <div class="col-2"></div>
         </div>
     </div>
-    <hr />
-    <div class="row">
+    <hr x-show="showDetails" />
+    <div class="row"  :id="'task_extras_' + task.id" x-show="showDetails">
         <div class="col-10">
-            <div class="col" x-text="task.description || 'no description'"></div>
+            <div>
+                <strong>Instructions</strong>
+                <div x-text="task.description || 'no description'"></div>
+            </div>
+            <hr class="pad-bottom"/>
+            <div>
+                <strong>Notes</strong>
+                <div x-text="task.notes || 'no notes'"></div>
+            </div>
         </div>
         <div class="col-2">
             <button
                 type="button"
-                class="btn btn-danger btn-sm"
-                @click="confirmDismissTask(group, task)">X</button>
+                class="btn btn-danger btn-sm float-right"
+                @click="confirmDismissTask(group, task)">
+                {% include 'global_includes/trashcan.html' %}
+            </button>
         </div>
     </div>
 </div>
