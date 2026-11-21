@@ -11,37 +11,36 @@
 )">
 
 <div class="row">
-    <div class="col-md-3">
+    <div class="col">
         <div class="pad-bottom">
             <h1>{{shop.name}}</h1>
         </div>
-        <div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-3  order-2 order-md-1">
+        <h2 class="pad-bottom">Shop Machines</h2>
+        <div id="loading_machines">
+            <h3>loading machines ...</h3>
+            <div class="spinner-border text-info" role="status">
+                <span class="visually-hidden"></span>
+            </div>
+        </div>
+        <div id="machines_loaded" class="hidden">
             <button type="button" class="btn btn-primary btn-full pad-bottom" @click="openMachineModal()">
                 + New Machine
             </button>
-        </div>
-        <div>
-            <h2 class="pad-bottom">Shop Machines</h2>
-            <div id="loading_machines">
-                <h3>loading machines ...</h3>
-                <div class="spinner-border text-info" role="status">
-                    <span class="visually-hidden"></span>
-                </div>
-            </div>
-            <div id="machines_loaded" class="hidden">
-                <template x-for="machine in machines" :key="machine.pk">
-                    <a :href="machine.dashboard_url" class="btn btn-info btn-full pad-bottom" x-text="machine.name"></div>
+            <template x-for="machine in machines" :key="machine.pk">
+                <a :href="machine.dashboard_url" class="btn btn-info btn-full pad-bottom" x-text="machine.name"></div>
+            </template>
+            <div class="">
+                <template x-if="machines.length === 0">
+                    <div class="alert alert-warning pad-bottom">This shop doesn't have any machines yet</div>
                 </template>
-                <div class="">
-                    <template x-if="machines.length === 0">
-                        <div class="alert alert-warning pad-bottom">This shop doesn't have any machines yet</div>
-                    </template>
-                </div>
             </div>
-
         </div>
     </div>
-    <div class="col-md-9">
+    <div class="col-md-9 order-1 order-md-2">
         <h2>Maintenance Schedule</h2>
          <div id="schedule_loading">
             <h2>loading schedule ...</h2>
@@ -50,15 +49,15 @@
             </div>
          </div>
          <div id="schedule_loaded" class="hidden">
-        <template x-for="(group, key) in schedule" :key="key">
-            <!-- Single root wrapper required by Alpine x-for -->
-            <div class="schedule_block">
-                <h4 x-text="group.title"></h4>
-                <template x-for="task in group.items" :key="task.pk">
-                    {% include 'shop/includes/dashboard_task_detail.html' %}
-                </template>
-            </div>
-        </template>
+            <template x-for="(group, key) in schedule" :key="key">
+                <!-- Single root wrapper required by Alpine x-for -->
+                <div class="schedule_block">
+                    <h4 x-text="group.title"></h4>
+                    <template x-for="task in group.items" :key="task.pk">
+                        {% include 'shop/includes/dashboard_task_detail.html' %}
+                    </template>
+                </div>
+            </template>
          </div>
     </div>
 

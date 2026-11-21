@@ -4,7 +4,7 @@ from shop.models import (
     MaintenanceTask,
     LogEntry,
 )
-from shop.test_utils import PopulatedTestBase
+from shop.utils.test_utils import PopulatedTestBase
 
 
 class TestMaintenanceItems(PopulatedTestBase):
@@ -35,6 +35,9 @@ class TestMaintenanceItems(PopulatedTestBase):
         self.assertEqual(expected_log_item.due_date, start_date)
 
     def test_log_item_status_save(self):
+        """ Verify that the local properties of a log entry are copied to it
+            from the parent maintenance task when it is marked done
+        """
         log_item = self.log_items[3]
         log_item.status = 'done'
         log_item.save()
@@ -44,6 +47,9 @@ class TestMaintenanceItems(PopulatedTestBase):
         self.assertEqual(log_item._machine_name, log_item.task.machine.name)
 
     def test_archive_task(self):
+        """ Verify that when a maintenance task is archived, pending iterations
+            of it are removed.
+        """
         test_item = self.maintenance_items[2]
         test_item.status = 'archived'
         test_item.save()
@@ -51,6 +57,9 @@ class TestMaintenanceItems(PopulatedTestBase):
         self.assertEqual(0, test_item.log_entries.filter(status='pending').count())
 
     def test_archive_machine(self):
+        """ Verify that when a machine is archvied, all associated maintenance
+            tasks are also archived
+        """
         machine = self.machines[1]
         machine.status = 'archived'
         machine.save()

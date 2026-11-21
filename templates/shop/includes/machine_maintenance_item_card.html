@@ -1,0 +1,31 @@
+<div class="card-header" x-text="item.name"></div>
+<div x-show="item!=editingTask"> <!-- show static content by default, toggle off when form is shown for this item -->
+    <div class="card-body">
+        <p class="card-title emph" x-text="item.display_interval"></p>
+        <p class="card-text" x-text="item.description"></p>
+        <p>Next Scheduled: <span x-text="new Date(item.next_scheduled.due_date).toLocaleDateString(undefined, { timeZone: 'UTC' })"></span></p>
+    </div>
+    <div class="card-footer">
+        <button class="btn btn-warning btn-sm"
+            @click="setEditingTask(item)">edit</button>
+        <button class="btn btn-success btn-sm float-right"
+            @click="setSelectedTask(item)">filter</button>
+    </div>
+</div>
+<div x-show="item==editingTask"> <!-- show when edit is clicked, hide after save or cancel is clicked -->
+    <form method="POST" @submit.prevent="editTask($event.target, item)">
+        {% csrf_token %}
+        <div class="card-body">
+            {{edit_form.as_p}}
+        </div>
+        <div class="card-footer">
+                <button type="button" class="btn btn-info btn-sm"
+                    @click="unSetEditingTask(item)">cancel</button>
+            <button type="submit" class="btn btn-warning btn-sm float-right">update</button>
+        </div>
+    </form>
+    <div class="card-footer">
+        <button class="btn btn-danger btn-full btn-sm"
+            @click="confirmArchiveTask(item)">Archive</button>
+    </div>
+</div>

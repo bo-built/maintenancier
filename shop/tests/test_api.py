@@ -1,6 +1,6 @@
 from django.urls import reverse
 from shop.models import Machine
-from shop.test_utils import PopulatedTestBase
+from shop.utils.test_utils import PopulatedTestBase
 from django.utils import timezone
 
 
