@@ -1,15 +1,16 @@
 from django.core.management.base import BaseCommand
-from shop.local_test_data import generate_local_test_data
+from shop.utils.generate_test_data import TestData
+from shop.utils.local_test_data import local_test_data
 
 
 class Command(BaseCommand):
-    help = 'Wipes all local shops and resets them with test data.'
+    help = 'Wipes all local users and shops and resets them with test data.'
 
     def handle(self, *args, **options):
-        test_user = generate_local_test_data()
+        test_data = TestData(local_test_data)
         print (
             "Local test data generated. You can login using:\n{}\n{}".format(
-                test_user['email'],
-                test_user['password']
+                test_data.test_data['user']['email'],
+                test_data.test_data['user']['password']
             )
         )
