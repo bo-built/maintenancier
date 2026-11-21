@@ -9,8 +9,8 @@ from rest_framework import status
 from shop.models import (
     ShopUser,
     Machine,
-    LogEntry,
     MaintenanceTask,
+    LogEntry,
 )
 
 from shop import serializers

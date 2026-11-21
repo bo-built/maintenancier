@@ -41,7 +41,7 @@ class MachineForm(forms.ModelForm):
         }
 
 
-class MachineMaintenanceTaskForm(forms.ModelForm):
+class MaintenanceTaskForm(forms.ModelForm):
     def __init__(self, *args, machine=None, **kwargs):
         super().__init__(*args, **kwargs)
         if machine is not None:
@@ -78,7 +78,7 @@ class MachineMaintenanceTaskForm(forms.ModelForm):
         }
 
 
-class MachineMaintenanceTaskEditForm(forms.Form):
+class MaintenanceTaskEditForm(forms.Form):
     name = forms.CharField(
         widget=forms.TextInput(attrs={
             'class': 'form-control',
