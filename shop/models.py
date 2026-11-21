@@ -390,6 +390,7 @@ class MaintenanceLogEntry(models.Model):
     )
     done_by = models.ForeignKey(ShopUser, blank=True, null=True, on_delete=models.SET_NULL)
     done_date = models.DateTimeField(blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
     _item_name = models.CharField(max_length=300, blank=True, null=True)
     _machine_name = models.CharField(max_length=300, blank=True, null=True)
     _description = models.TextField(blank=True, null=True)

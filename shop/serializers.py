@@ -80,6 +80,7 @@ class maintenanceLogEntrySerializer(serializers.HyperlinkedModelSerializer):
             'done_by',
             'done_date',
             'status',
+            'notes',
             'item',
             'interval',
             'item_name',
