@@ -203,6 +203,25 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        exportTableToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Optional: Add a title above the table
+            doc.text("Team Directory", 14, 15);
+
+            // Convert the HTML table to a PDF table
+            doc.autoTable({
+                html: '#log_table',
+                startY: 20, // Starts below the title
+                theme: 'grid', // Options: 'striped', 'grid', 'plain'
+                styles: { fontSize: 10 },
+                headStyles: { fillColor: [41, 128, 185] } // Custom header color (RGB)
+            });
+
+            doc.save('maintenance-log-export.pdf');
+        },
+
         async initDashoard(url) {
 
             this.createTaskModal = new bootstrap.Modal(this.$refs.createTaskModal);

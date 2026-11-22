@@ -3,7 +3,7 @@ from shop import services
 
 
 class TestShopCreationServices(PopulatedTestBase):
-    def test_shop_created_generates_shop_user(self):
+    def test_shop_created_generates_related_objects(self):
         user = self.user
         data = {
             'name': 'The Sawdust Shack',
@@ -16,3 +16,5 @@ class TestShopCreationServices(PopulatedTestBase):
 
         shop_user = shop_obj.shopuser_set.get(user=self.user)
         self.assertIsNotNone(shop_user)
+        shop_machine = shop_obj.machine_set.get(is_shop=True)
+        self.assertIsNotNone(shop_machine)

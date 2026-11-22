@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.utils import timezone
 from django.contrib.auth.models import User
 
+from shop import services
 from shop.models import (
     Shop,
     ShopUser,
@@ -65,7 +66,6 @@ class TestData():
             log_entry.save(bypass_child=True, force_done_date=True)
         return task
 
-
     def generate_main_user(self):
         main_user = User.objects.create_user(
             first_name=self.test_data['user']['first_name'],
@@ -75,7 +75,6 @@ class TestData():
             password=self.test_data['user']['password'],
         )
         return main_user
-
 
     def generate_shop_user(self, _user, shop):
         user = User.objects.filter(email=_user['email']).first()
@@ -90,10 +89,12 @@ class TestData():
         shop_user = ShopUser.objects.create(shop=shop, user=user)
         return shop_user
 
-
     def generate_shop_data(self, _shop):
-        shop = Shop.objects.create(name=_shop['name'])
-        shopuser = ShopUser.objects.create(shop=shop, user=self.main_user)
+        shop = services.create_shop(
+            user=self.main_user,
+            validated_data={'name': _shop['name']}
+        )
+        shopuser = shop.shopuser_set.get(user=self.main_user)
         users = [shopuser, ]
         for other_user in _shop['other_users']:
             users.append(self.generate_shop_user(other_user, shop))
@@ -109,7 +110,6 @@ class TestData():
             for _task in _machine['tasks']:
                 self.generate_task_and_log_entries(_task, shop, machine, users)
         return shop
-
 
     def generate_local_test_data(self):
         User.objects.all().delete()

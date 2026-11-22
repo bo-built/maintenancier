@@ -29,26 +29,10 @@ class StatusModel(models.Model):
     )
 
 
-class UpdatableModel(models.Model):
-
-    EDITABLE_FIELDS = []
-
-    class Meta:
-        abstract = True
-
-    def update(self, data):
-        for key, val in data.items():
-            if key in self.EDITABLE_FIELDS:
-                setattr(self, key, val)
-        self.save()
-
-
-class Shop(UpdatableModel):
+class Shop(models.Model):
     ''' Main object for the app - representes a physical shop or org that
         requires routine maintenance that needs to be scheduled and logged
     '''
-
-    EDITABLE_FIELDS = ['name', ]
 
     def __str__(self):
         return 'Shop <pk: {}> -- {}'.format(self.pk, self.name)
@@ -388,6 +372,14 @@ class LogEntry(models.Model):
         OVERDUE = 'overdue', 'Overdue'
         DISMISSED = 'dismissed', 'Dismissed'
 
+    EDITABLE_FIELDS = [
+        'due_date',
+        'status',
+        'done_by',
+        'done_date',
+        'notes',
+    ]
+
     # source is the previous iteration that this task was generated from, if
     # it is not the first instance of a task's log entries
     source = models.ForeignKey(
@@ -532,15 +524,3 @@ def create_first_log_instance(sender, instance, created, **kwargs):
             due_date=next_due,
         )
         next_entry.save()
-
-
-@receiver(post_save, sender=Shop)
-def create_general_shop_machine(sender, instance, created, **kwargs):
-    ''' When a new shop is created, initiate a "general shop" machine
-    '''
-    if created:
-        Machine.objects.create(
-            shop=instance,
-            name='General Shop',
-            is_shop=True,
-        )

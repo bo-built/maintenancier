@@ -426,22 +426,10 @@ class LogEntryApi(ShopUserBaseApi):
     def patch(self, request, shop_pk, task_pk, log_entry_pk):
         log_item = get_object_or_404(LogEntry, pk=log_entry_pk)
 
-        done_by_data = request.data.get('done_by')
-        save_kwargs = {}
-
-        if done_by_data is not None and request.data.get('status') == 'done':
-            if isinstance(done_by_data, dict) and 'pk' in done_by_data:
-                # Verify the ShopUser belongs to the same shop for security
-                save_kwargs['done_by'] = get_object_or_404(
-                    ShopUser,
-                    pk=done_by_data['pk'],
-                    shop__pk=shop_pk
-                )
-            else:
-                save_kwargs['done_by'] = None
-        if request.data.get('status') != 'done':
-            save_kwargs['done_by'] = None
-            save_kwargs['done_date'] = None
+        sanitized_data = services.sanitize_log_entry_data(
+            shop=self.shop,
+            request_data=request.data
+        )
 
         serializer = serializers.LogEntrySerializer(
             log_item,
@@ -451,7 +439,7 @@ class LogEntryApi(ShopUserBaseApi):
 
         try:
             if serializer.is_valid():
-                serializer.save(**save_kwargs)
+                serializer.save(**sanitized_data)
                 return Response(
                     {
                         'status': 'ok',

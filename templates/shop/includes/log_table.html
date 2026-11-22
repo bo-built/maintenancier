@@ -1,5 +1,11 @@
-<table class="table">
+<div>
+    <button class="btn btn-info float-right" @click="exportTableToPDF()">print</button>
+</div>
+<table class="table" id="log_table">
     <thead>
+        <tr>
+            <th colspabn="100%">Maintenance Log</th>
+        </tr>
         <tr>
             <th>Item</th>
             <th>Done By</th>
